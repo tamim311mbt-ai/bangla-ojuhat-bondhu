@@ -8,12 +8,13 @@ import { scoreVerdict, toBanglaNumber, type GeneratedExcuse } from "@/lib/excuse
 
 interface Props {
   result: GeneratedExcuse;
+  animationKey?: number;
   onCopy: () => void;
   onAnother: () => void;
   onWhatsApp: () => void;
 }
 
-export function ResultCard({ result, onCopy, onAnother, onWhatsApp }: Props) {
+export function ResultCard({ result, animationKey = 0, onCopy, onAnother, onWhatsApp }: Props) {
   const shareCardRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -58,7 +59,7 @@ export function ResultCard({ result, onCopy, onAnother, onWhatsApp }: Props) {
   return (
     <>
       <section
-        key={result.id + result.score}
+        key={`${result.id}-${result.score}-${animationKey}`}
         aria-live="polite"
         className="animate-pop overflow-hidden rounded-3xl border border-border/60 bg-card shadow-card"
       >
@@ -92,7 +93,7 @@ export function ResultCard({ result, onCopy, onAnother, onWhatsApp }: Props) {
               aria-valuemax={100}
             >
               <div
-                className="h-full rounded-full bg-gradient-score transition-[width] duration-700 ease-out"
+                className="animate-bar-fill h-full origin-left rounded-full bg-gradient-score transition-[width] duration-700 ease-out"
                 style={{ width: `${result.score}%` }}
               />
             </div>
@@ -131,7 +132,7 @@ export function ResultCard({ result, onCopy, onAnother, onWhatsApp }: Props) {
               size="action"
               onClick={handleDownloadCard}
               disabled={isDownloading}
-              className="h-auto min-h-12 rounded-xl bg-gradient-cta py-2.5 font-bold text-primary-foreground shadow-sm transition-transform hover:opacity-95 active:scale-[0.97]"
+              className="h-auto min-h-12 rounded-xl bg-gradient-cta py-2.5 font-bold text-primary-foreground shadow-sm hover:brightness-105"
             >
               {isDownloading ? (
                 <>

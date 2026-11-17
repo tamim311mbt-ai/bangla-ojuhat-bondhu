@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ChevronDown, Moon, Sparkles, Sun, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ResultCard } from "@/components/ojuhat/ResultCard";
 import { StatsCards } from "@/components/ojuhat/StatsCards";
 import { WelcomeModal } from "@/components/ojuhat/WelcomeModal";
+import { fireExcuseConfetti } from "@/lib/confetti";
 import mascot from "@/assets/mascot.png";
 import {
   PROBLEMS,
@@ -76,7 +77,11 @@ export const Route = createFileRoute("/")({
 });
 
 const selectClass =
-  "h-13 sm:h-14 w-full appearance-none rounded-2xl border-2 border-border bg-card pl-4 pr-11 text-sm sm:text-base font-medium text-foreground outline-none transition-colors focus:border-primary";
+  "h-13 sm:h-14 w-full cursor-pointer appearance-none rounded-2xl border-2 border-border bg-card pl-4 pr-11 text-sm sm:text-base font-medium text-foreground outline-none transition-all duration-200 ease-out hover:border-primary/50 hover:shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_10%,transparent)] focus:border-primary focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--primary)_22%,transparent),0_10px_24px_-10px_color-mix(in_oklab,var(--primary)_38%,transparent)]";
+
+function enterDelay(ms: number): CSSProperties {
+  return { "--enter-delay": `${ms}ms` } as CSSProperties;
+}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -93,6 +98,7 @@ function Index() {
   const [tone, setTone] = useState<Tone>("real");
   const [extra, setExtra] = useState("");
   const [result, setResult] = useState<GeneratedExcuse | null>(null);
+  const [resultKey, setResultKey] = useState(0);
   const [daily, setDaily] = useState<Excuse | null>(null);
   const [welcomeOpen, setWelcomeOpen] = useState(true);
   const [isDark, setIsDark] = useState(false);
@@ -130,7 +136,9 @@ function Index() {
   const generate = (scroll = true) => {
     const r = generateExcuse({ target, problem, tone, extra, previousId: result?.id });
     setResult(r);
+    setResultKey((prev) => prev + 1);
     if (scroll) {
+      fireExcuseConfetti();
       setExcusesCount((prev) => prev + 1);
       void recordExcuseGenerated().then(setExcusesCount);
     }
@@ -161,7 +169,10 @@ function Index() {
     <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col overflow-x-clip px-3.5 pb-8 pt-5 sm:px-6 sm:pt-7 lg:max-w-5xl lg:px-8">
       <WelcomeModal open={welcomeOpen} onOpenChange={setWelcomeOpen} />
 
-      <header className="flex items-center justify-between gap-2 border-b border-border/60 pb-4 sm:gap-4">
+      <header
+        className="animate-enter flex items-center justify-between gap-2 border-b border-border/60 pb-4 sm:gap-4"
+        style={enterDelay(0)}
+      >
         <div className="min-w-0">
           <h1 className="font-display text-3xl leading-tight text-primary sm:text-4xl">
             অজুহাত ফ্যাক্টরি
@@ -180,12 +191,12 @@ function Index() {
             onClick={toggleTheme}
             aria-label={isDark ? "লাইট মোড চালু করুন" : "ডার্ক মোড চালু করুন"}
             title={isDark ? "লাইট মোড" : "ডার্ক মোড"}
-            className="flex size-11 cursor-pointer items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all hover:border-primary/50 hover:bg-secondary active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex size-11 cursor-pointer items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 hover:border-primary/50 hover:bg-secondary active:scale-90 active:duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {isDark ? (
-              <Sun className="size-5 text-sunny" />
+              <Sun className="size-5 text-sunny transition-transform duration-300" />
             ) : (
-              <Moon className="size-5 text-primary" />
+              <Moon className="size-5 text-primary transition-transform duration-300" />
             )}
           </button>
         </div>
@@ -194,7 +205,10 @@ function Index() {
       <main className="mt-5 flex-1 lg:mt-8 lg:grid lg:grid-cols-12 lg:items-start lg:gap-8">
         {/* Left column: Hero intro + Excuse generator form */}
         <div className="lg:col-span-7">
-          <section className="relative flex items-center gap-3 rounded-3xl bg-card/65 p-4 shadow-sm backdrop-blur-sm sm:gap-4 sm:p-5 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none">
+          <section
+            className="animate-enter relative flex items-center gap-3 rounded-3xl bg-card/65 p-4 shadow-sm backdrop-blur-sm sm:gap-4 sm:p-5 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none"
+            style={enterDelay(70)}
+          >
             <div className="min-w-0 flex-1">
               <p className="font-display text-2xl leading-snug sm:text-[28px] lg:text-[32px]">
                 ঝামেলায় পড়েছেন? <span className="text-teal">চিন্তা নেই!</span>
@@ -203,24 +217,27 @@ function Index() {
                 তিনটি জিনিস বেছে নিন, বাকিটা আমাদের মাথা খাটানোর দায়িত্ব।
               </p>
             </div>
-            <img
-              src={mascot}
-              alt="হাতে বাতি নিয়ে দুষ্টু হাসি দেওয়া একটি চরিত্র"
-              width={816}
-              height={816}
-              className="animate-float w-24 shrink-0 sm:w-32 lg:w-36"
-            />
+            <div className="animate-enter shrink-0" style={enterDelay(110)}>
+              <img
+                src={mascot}
+                alt="হাতে বাতি নিয়ে দুষ্টু হাসি দেওয়া একটি চরিত্র"
+                width={816}
+                height={816}
+                className="animate-float w-24 sm:w-32 lg:w-36"
+              />
+            </div>
           </section>
 
           <form
-            className="mt-4 space-y-4 rounded-3xl border border-border/60 bg-card p-4 shadow-card sm:space-y-5 sm:p-6 lg:mt-5"
+            className="animate-enter mt-4 space-y-4 rounded-3xl border border-border/60 bg-card p-4 shadow-card sm:space-y-5 sm:p-6 lg:mt-5"
+            style={enterDelay(140)}
             onSubmit={(e) => {
               e.preventDefault();
               generate();
             }}
           >
             <Field label="কার জন্য অজুহাত?">
-              <div className="relative">
+              <div className="group relative">
                 <select
                   className={selectClass}
                   value={target}
@@ -232,12 +249,12 @@ function Index() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+                <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground transition-transform duration-200 group-hover:text-primary group-focus-within:rotate-180 group-focus-within:text-primary" />
               </div>
             </Field>
 
             <Field label="কী সমস্যা হয়েছে?">
-              <div className="relative">
+              <div className="group relative">
                 <select
                   className={selectClass}
                   value={problem}
@@ -249,7 +266,7 @@ function Index() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+                <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground transition-transform duration-200 group-hover:text-primary group-focus-within:rotate-180 group-focus-within:text-primary" />
               </div>
             </Field>
 
@@ -265,13 +282,19 @@ function Index() {
                       role="radio"
                       aria-checked={active}
                       onClick={() => setTone(t.value)}
-                      className={`flex min-h-[88px] cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 px-1 py-2.5 text-center transition-all sm:px-2 sm:py-3 ${
+                      className={`group flex min-h-[88px] cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 px-1 py-2.5 text-center transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.94] active:duration-100 sm:px-2 sm:py-3 ${
                         active
-                          ? "scale-[1.02] border-primary bg-primary/10 text-foreground"
-                          : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                          ? "scale-[1.03] border-primary bg-primary/12 text-foreground shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_18%,transparent),0_10px_24px_-8px_color-mix(in_oklab,var(--primary)_40%,transparent)]"
+                          : "border-border bg-card text-muted-foreground hover:-translate-y-0.5 hover:border-primary/55 hover:shadow-[0_6px_18px_-6px_color-mix(in_oklab,var(--primary)_25%,transparent)]"
                       }`}
                     >
-                      <span className="text-xl sm:text-2xl">{t.emoji}</span>
+                      <span
+                        className={`text-xl transition-transform duration-200 sm:text-2xl ${
+                          active ? "scale-110" : "group-hover:scale-110"
+                        }`}
+                      >
+                        {t.emoji}
+                      </span>
                       <span className="text-[11px] font-bold leading-tight sm:text-[13px]">
                         {t.label}
                       </span>
@@ -291,7 +314,7 @@ function Index() {
                 rows={2}
                 maxLength={160}
                 placeholder="যেমন: আজ বাইরে প্রচণ্ড বৃষ্টি হচ্ছে"
-                className="w-full resize-none rounded-2xl border-2 border-border bg-card p-3.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary sm:p-4 sm:text-base"
+                className="w-full resize-none rounded-2xl border-2 border-border bg-card p-3.5 text-sm text-foreground outline-none transition-all duration-200 ease-out placeholder:text-muted-foreground/70 hover:border-primary/50 focus:border-primary focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--primary)_20%,transparent),0_10px_24px_-10px_color-mix(in_oklab,var(--primary)_35%,transparent)] sm:p-4 sm:text-base"
               />
             </Field>
 
@@ -312,12 +335,16 @@ function Index() {
             {result ? (
               <ResultCard
                 result={result}
+                animationKey={resultKey}
                 onCopy={copy}
                 onAnother={() => generate(false)}
                 onWhatsApp={whatsapp}
               />
             ) : (
-              <div className="hidden flex-col items-center justify-center rounded-3xl border-2 border-dashed border-border bg-card/75 p-7 text-center shadow-sm lg:flex">
+              <div
+                className="animate-enter hidden flex-col items-center justify-center rounded-3xl border-2 border-dashed border-border bg-card/75 p-7 text-center shadow-sm lg:flex"
+                style={enterDelay(170)}
+              >
                 <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <Wand2 className="size-7" />
                 </div>
@@ -333,7 +360,10 @@ function Index() {
           </div>
 
           {daily && (
-            <section className="overflow-hidden rounded-3xl bg-gradient-day p-5 text-teal-foreground shadow-card sm:p-6">
+            <section
+              className="animate-enter overflow-hidden rounded-3xl bg-gradient-day p-5 text-teal-foreground shadow-card sm:p-6"
+              style={enterDelay(210)}
+            >
               <div className="flex items-center gap-2">
                 <Sparkles className="size-5 shrink-0" />
                 <h2 className="font-display text-2xl">আজকের সেরা অজুহাত</h2>
@@ -347,7 +377,9 @@ function Index() {
             </section>
           )}
 
-          <StatsCards visitors={visitorsCount} excusesCount={excusesCount} />
+          <div className="animate-enter" style={enterDelay(250)}>
+            <StatsCards visitors={visitorsCount} excusesCount={excusesCount} />
+          </div>
         </div>
       </main>
 

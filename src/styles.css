@@ -213,7 +213,25 @@
   animation: float 5s ease-in-out infinite;
 }
 @utility animate-pop {
-  animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: slide-up-reveal 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@utility animate-enter {
+  animation: enter-up 0.38s cubic-bezier(0.16, 1, 0.3, 1) var(--enter-delay, 0ms) both;
+}
+@utility animate-bar-fill {
+  animation: bar-grow 0.65s cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+}
+@utility animate-modal-in {
+  animation: modal-zoom-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@utility animate-modal-out {
+  animation: modal-zoom-out 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@utility animate-overlay-in {
+  animation: overlay-fade-in 0.26s ease-out both;
+}
+@utility animate-overlay-out {
+  animation: overlay-fade-out 0.2s ease-in both;
 }
 
 @keyframes glow-pulse {
@@ -224,7 +242,45 @@
   0%, 100% { transform: translateY(0) rotate(-2deg); }
   50% { transform: translateY(-10px) rotate(2deg); }
 }
-@keyframes pop-in {
-  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+@keyframes slide-up-reveal {
+  from { opacity: 0; transform: translateY(22px) scale(0.97); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes enter-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes modal-zoom-in {
+  from { opacity: 0; scale: 0.88; }
+  to { opacity: 1; scale: 1; }
+}
+@keyframes modal-zoom-out {
+  from { opacity: 1; scale: 1; }
+  to { opacity: 0; scale: 0.92; }
+}
+@keyframes overlay-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes overlay-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-glow,
+  .animate-float,
+  .animate-pop,
+  .animate-enter,
+  .animate-bar-fill,
+  .animate-modal-in,
+  .animate-modal-out,
+  .animate-overlay-in,
+  .animate-overlay-out {
+    animation: none !important;
+  }
 }

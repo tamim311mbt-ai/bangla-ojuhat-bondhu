@@ -18,10 +18,10 @@ export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out" />
         <DialogPrimitive.Content
           aria-describedby="welcome-modal-desc"
-          className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border border-border bg-card text-card-foreground shadow-card outline-none duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:w-[calc(100%-2rem)]"
+          className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border border-border bg-card text-card-foreground shadow-card outline-none data-[state=open]:animate-modal-in data-[state=closed]:animate-modal-out sm:w-[calc(100%-2rem)]"
         >
           {/* Warm theme top accent bar */}
           <div className="sticky top-0 z-10 h-2.5 w-full bg-gradient-cta" />
@@ -29,7 +29,7 @@ export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
           {/* Top-right close (X) button */}
           <DialogPrimitive.Close
             aria-label="পপআপ বন্ধ করুন"
-            className="absolute right-3 top-4 z-20 flex size-10 cursor-pointer items-center justify-center rounded-full bg-muted/90 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:right-3.5 sm:top-5"
+            className="absolute right-3 top-4 z-20 flex size-10 cursor-pointer items-center justify-center rounded-full bg-muted/90 text-muted-foreground transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 hover:bg-secondary hover:text-foreground active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:right-3.5 sm:top-5"
           >
             <X className="size-5" />
           </DialogPrimitive.Close>
@@ -48,7 +48,7 @@ export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
 
             {/* Circular profile image */}
             <div className="relative mt-4 sm:mt-5">
-              <div className="size-24 overflow-hidden rounded-full border-4 border-primary/25 bg-white shadow-card ring-4 ring-primary-glow/25 sm:size-36">
+              <div className="size-24 overflow-hidden rounded-full border-4 border-primary/25 bg-white shadow-card ring-4 ring-primary-glow/25 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 sm:size-36">
                 {imageError ? (
                   <div className="flex size-full items-center justify-center bg-secondary font-display text-3xl text-primary sm:text-4xl">
                     Tamim
@@ -82,7 +82,7 @@ export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
                 href={FACEBOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[#1877F2] px-4 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#166FE5] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1877F2] focus-visible:ring-offset-2 sm:h-12 sm:gap-2.5 sm:px-5 sm:text-[15px]"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[#1877F2] px-4 text-sm font-bold text-white shadow-sm transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-[1.025] hover:bg-[#166FE5] hover:shadow-md active:scale-[0.95] active:duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1877F2] focus-visible:ring-offset-2 sm:h-12 sm:gap-2.5 sm:px-5 sm:text-[15px]"
               >
                 <svg
                   aria-hidden="true"
