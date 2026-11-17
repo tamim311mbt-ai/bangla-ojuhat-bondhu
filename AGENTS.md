@@ -28,3 +28,6 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- Excuse content, labels, tips and generation logic live in `src/lib/excuses.ts` (covered by `src/lib/excuses.test.ts`); keep UI components free of excuse data so the collection can grow in one place.
