@@ -201,6 +201,11 @@ function Index() {
       <footer className="mt-auto pt-8 text-center">
         <p className="text-sm text-muted-foreground">⚠️ শুধুমাত্র বিনোদনের জন্য তৈরি। ধরা পড়লে কর্তৃপক্ষ দায়ী নয়!</p>
         <p className="mt-1 font-display text-lg text-primary">অজুহাত.কম</p>
+        <div className="mx-auto mt-4 max-w-xs rounded-2xl border border-primary/15 bg-card/70 px-4 py-3 shadow-card">
+          <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">তৈরি করছিনে</p>
+          <p className="mt-1 font-display text-xl leading-snug text-foreground">Motasim Billah Tamim</p>
+          <p className="mt-0.5 text-xs font-semibold text-primary">CEO · অজুহাত.কম</p>
+        </div>
       </footer>
     </div>
   );
