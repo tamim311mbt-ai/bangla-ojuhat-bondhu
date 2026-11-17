@@ -82,7 +82,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "অজুহাত.কম — স্মার্ট অজুহাত জেনারেটর" },
+      { title: "অজুহাত ফ্যাক্টরি — এখানে যত্ন সহকারে নিখুঁত অজুহাত তৈরি করা হয় 🏭" },
       { name: "description", content: "বস, শিক্ষক, বাবা-মা বা বন্ধুর জন্য এক ক্লিকে সেরা বাংলা অজুহাত তৈরি করুন।" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -98,6 +98,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Galada&family=Hind+Siliguri:wght@400;500;600;700&display=swap",
+        crossOrigin: "anonymous",
       },
     ],
   }),

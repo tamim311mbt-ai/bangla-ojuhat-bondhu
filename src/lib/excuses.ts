@@ -215,9 +215,29 @@ export function getPool(target: Target, problem: Problem, tone: Tone) {
 
 export interface GeneratedExcuse {
   id: string;
+  target: Target;
+  tone: Tone;
   message: string;
   score: number;
   tip: string;
+}
+
+const CARD_TARGET_LABELS: Record<Target, string> = {
+  boss: "অফিসের বসের জন্য",
+  teacher: "শিক্ষকের জন্য",
+  parents: "বাবা-মায়ের জন্য",
+  friend: "বন্ধুর জন্য",
+  partner: "ভালোবাসার মানুষের জন্য",
+};
+
+const CARD_TONE_LABELS: Record<Tone, string> = {
+  real: "বিশ্বাসযোগ্য অজুহাত",
+  funny: "হাস্যকর অজুহাত",
+  emotional: "আবেগঘন অজুহাত",
+};
+
+export function formatExcuseCardBadge(target: Target, tone: Tone): string {
+  return `${CARD_TARGET_LABELS[target]} • ${CARD_TONE_LABELS[tone]}`;
 }
 
 function pick<T>(arr: T[], rand: () => number): T {
@@ -241,7 +261,7 @@ export function generateExcuse(
   const score = Math.max(1, Math.min(99, excuse.score + jitter + (extra ? 3 : 0)));
   const tip = pick([...TONE_TIPS[input.tone], ...TARGET_TIPS[input.target]], rand);
 
-  return { id: excuse.id, message: parts.join(" "), score, tip };
+  return { id: excuse.id, target: input.target, tone: input.tone, message: parts.join(" "), score, tip };
 }
 
 export function excuseOfTheDay(date: Date = new Date()): Excuse {

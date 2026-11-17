@@ -4,6 +4,7 @@ import { ChevronDown, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ResultCard } from "@/components/ojuhat/ResultCard";
+import { WelcomeModal } from "@/components/ojuhat/WelcomeModal";
 import mascot from "@/assets/mascot.png";
 import {
   PROBLEMS,
@@ -21,12 +22,12 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "অজুহাত.কম — স্মার্ট অজুহাত জেনারেটর" },
+      { title: "অজুহাত ফ্যাক্টরি — এখানে যত্ন সহকারে নিখুঁত অজুহাত তৈরি করা হয় 🏭" },
       {
         name: "description",
         content: "বস, শিক্ষক, বাবা-মা, বন্ধু বা ভালোবাসার মানুষের জন্য এক ক্লিকে বিশ্বাসযোগ্য, হাস্যকর বা আবেগঘন বাংলা অজুহাত।",
       },
-      { property: "og:title", content: "অজুহাত.কম — স্মার্ট অজুহাত জেনারেটর" },
+      { property: "og:title", content: "অজুহাত ফ্যাক্টরি — এখানে যত্ন সহকারে নিখুঁত অজুহাত তৈরি করা হয় 🏭" },
       { property: "og:description", content: "এক ক্লিকে সেরা বাংলা অজুহাত তৈরি করুন। ধরা পড়লে কর্তৃপক্ষ দায়ী নয়!" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -54,6 +55,7 @@ function Index() {
   const [extra, setExtra] = useState("");
   const [result, setResult] = useState<GeneratedExcuse | null>(null);
   const [daily, setDaily] = useState<Excuse | null>(null);
+  const [welcomeOpen, setWelcomeOpen] = useState(true);
   const resultRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setDaily(excuseOfTheDay()), []);
@@ -81,10 +83,13 @@ function Index() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-xl flex-col px-4 pb-8 pt-6">
+      <WelcomeModal open={welcomeOpen} onOpenChange={setWelcomeOpen} />
       <header className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-4xl leading-tight text-primary">অজুহাত.কম</h1>
-          <p className="text-sm font-medium text-muted-foreground">স্মার্ট অজুহাত জেনারেটর</p>
+          <h1 className="font-display text-4xl leading-tight text-primary">অজুহাত ফ্যাক্টরি</h1>
+          <p className="text-sm font-medium text-muted-foreground">
+            এখানে যত্ন সহকারে নিখুঁত অজুহাত তৈরি করা হয় 🏭
+          </p>
         </div>
         <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground">
           ৬৮+ অজুহাত
@@ -200,11 +205,11 @@ function Index() {
 
       <footer className="mt-auto pt-8 text-center">
         <p className="text-sm text-muted-foreground">⚠️ শুধুমাত্র বিনোদনের জন্য তৈরি। ধরা পড়লে কর্তৃপক্ষ দায়ী নয়!</p>
-        <p className="mt-1 font-display text-lg text-primary">অজুহাত.কম</p>
+        <p className="mt-1 font-display text-lg text-primary">অজুহাত ফ্যাক্টরি</p>
         <div className="mx-auto mt-4 max-w-xs rounded-2xl border border-primary/15 bg-card/70 px-4 py-3 shadow-card">
-          <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">তৈরি করছিনে</p>
+          <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">তৈরি করেছেন</p>
           <p className="mt-1 font-display text-xl leading-snug text-foreground">Motasim Billah Tamim</p>
-          <p className="mt-0.5 text-xs font-semibold text-primary">CEO · অজুহাত.কম</p>
+          <p className="mt-0.5 text-xs font-semibold text-primary">CEO · অজুহাত ফ্যাক্টরি</p>
         </div>
       </footer>
     </div>

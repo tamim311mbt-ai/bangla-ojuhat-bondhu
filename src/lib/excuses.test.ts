@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { EXCUSES, PROBLEMS, TARGETS, TONES, generateExcuse, getPool } from "./excuses";
+import {
+  EXCUSES,
+  PROBLEMS,
+  TARGETS,
+  TONES,
+  formatExcuseCardBadge,
+  generateExcuse,
+  getPool,
+} from "./excuses";
 
 describe("excuse database", () => {
   it("has more than 50 excuses", () => {
@@ -28,5 +36,12 @@ describe("excuse database", () => {
       expect(r.score).toBeGreaterThanOrEqual(1);
       expect(r.score).toBeLessThanOrEqual(99);
     }
+  });
+
+  it("returns target, tone, and formatted card badge label", () => {
+    const r = generateExcuse({ target: "boss", problem: "late", tone: "funny" });
+    expect(r.target).toBe("boss");
+    expect(r.tone).toBe("funny");
+    expect(formatExcuseCardBadge(r.target, r.tone)).toBe("অফিসের বসের জন্য • হাস্যকর অজুহাত");
   });
 });
