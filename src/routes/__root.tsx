@@ -82,10 +82,41 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "অজুহাত ফ্যাক্টরি — এখানে যত্ন সহকারে নিখুঁত অজুহাত তৈরি করা হয় 🏭" },
-      { name: "description", content: "বস, শিক্ষক, বাবা-মা বা বন্ধুর জন্য এক ক্লিকে সেরা বাংলা অজুহাত তৈরি করুন।" },
+      { title: "অজুহাত ফ্যাক্টরি (Ojuhat Factory) — স্মার্ট বাংলা অজুহাত জেনারেটর" },
+      {
+        name: "description",
+        content:
+          "বস, শিক্ষক, বাবা-মা, বন্ধু বা ভালোবাসার মানুষের জন্য এক ক্লিকে বিশ্বাসযোগ্য, হাস্যকর ও আবেগঘন বাংলা অজুহাত তৈরি করুন ও কার্ড ডাউনলোড করুন।",
+      },
+      {
+        name: "keywords",
+        content:
+          "অজুহাত ফ্যাক্টরি, Ojuhat Factory, বাংলা অজুহাত জেনারেটর, Bangla excuse generator, মজার অজুহাত, অফিসের অজুহাত, ক্লাসের অজুহাত",
+      },
+      { name: "author", content: "Motasim Billah Tamim" },
+      { name: "robots", content: "index, follow" },
       { property: "og:type", content: "website" },
+      { property: "og:locale", content: "bn_BD" },
+      { property: "og:site_name", content: "অজুহাত ফ্যাক্টরি (Ojuhat Factory)" },
+      {
+        property: "og:title",
+        content: "অজুহাত ফ্যাক্টরি (Ojuhat Factory) — স্মার্ট বাংলা অজুহাত জেনারেটর",
+      },
+      {
+        property: "og:description",
+        content:
+          "বস, শিক্ষক, বাবা-মা, বন্ধু বা ভালোবাসার মানুষের জন্য এক ক্লিকে বিশ্বাসযোগ্য, হাস্যকর ও আবেগঘন বাংলা অজুহাত তৈরি করুন ও কার্ড ডাউনলোড করুন।",
+      },
       { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:title",
+        content: "অজুহাত ফ্যাক্টরি (Ojuhat Factory) — স্মার্ট বাংলা অজুহাত জেনারেটর",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "বস, শিক্ষক, বাবা-মা, বন্ধু বা ভালোবাসার মানুষের জন্য এক ক্লিকে বিশ্বাসযোগ্য, হাস্যকর ও আবেগঘন বাংলা অজুহাত তৈরি করুন ও কার্ড ডাউনলোড করুন।",
+      },
     ],
     links: [
       {
@@ -110,9 +141,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="bn">
+    <html lang="bn" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("ojuhat-theme");var d=t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.classList.add("dark");}catch(e){}})();`,
+          }}
+        />
       </head>
       <body>
         {children}

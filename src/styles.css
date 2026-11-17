@@ -9,7 +9,7 @@
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 /*
  * Design system definition.
@@ -17,16 +17,6 @@
  * The design lives in this file: oklch color tokens on the shadcn variables
  * (--background, --foreground, --primary, --secondary, --muted, --accent, ...) plus
  * new tokens as needed, font tokens, and custom styles and animations.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
  */
 
 @theme inline {
@@ -134,9 +124,61 @@
   --shadow-glow: 0 10px 30px -6px color-mix(in oklab, var(--primary) 65%, transparent), 0 0 0 4px color-mix(in oklab, var(--primary-glow) 25%, transparent);
 }
 
+.dark {
+  --background: oklch(0.16 0.022 35);
+  --foreground: oklch(0.95 0.015 85);
+  --card: oklch(0.215 0.025 38);
+  --card-foreground: oklch(0.95 0.015 85);
+  --popover: oklch(0.215 0.025 38);
+  --popover-foreground: oklch(0.95 0.015 85);
+  --primary: oklch(0.7 0.19 34);
+  --primary-foreground: oklch(0.99 0.01 85);
+  --primary-glow: oklch(0.78 0.16 60);
+  --secondary: oklch(0.27 0.032 45);
+  --secondary-foreground: oklch(0.93 0.02 80);
+  --muted: oklch(0.26 0.024 40);
+  --muted-foreground: oklch(0.76 0.025 75);
+  --accent: oklch(0.28 0.055 202);
+  --accent-foreground: oklch(0.9 0.06 195);
+  --sunny: oklch(0.82 0.15 88);
+  --sunny-foreground: oklch(0.92 0.11 88);
+  --teal: oklch(0.68 0.12 202);
+  --teal-foreground: oklch(0.99 0.01 200);
+  --whatsapp: oklch(0.62 0.16 150);
+  --whatsapp-foreground: oklch(0.99 0.01 150);
+  --destructive: oklch(0.62 0.21 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.32 0.03 45);
+  --input: oklch(0.32 0.03 45);
+  --ring: oklch(0.7 0.19 34);
+  --sidebar: oklch(0.18 0.022 35);
+  --sidebar-foreground: oklch(0.95 0.015 85);
+  --sidebar-primary: oklch(0.7 0.19 34);
+  --sidebar-primary-foreground: oklch(0.99 0.01 85);
+  --sidebar-accent: oklch(0.27 0.032 45);
+  --sidebar-accent-foreground: oklch(0.93 0.02 80);
+  --sidebar-border: oklch(0.32 0.03 45);
+  --sidebar-ring: oklch(0.7 0.19 34);
+
+  --gradient-cta: linear-gradient(115deg, var(--primary) 0%, oklch(0.72 0.18 46) 50%, var(--primary-glow) 100%);
+  --gradient-score: linear-gradient(90deg, var(--teal), var(--whatsapp), var(--sunny));
+  --gradient-day: linear-gradient(130deg, oklch(0.45 0.11 205) 0%, oklch(0.34 0.1 232) 100%);
+  --gradient-page:
+    radial-gradient(60% 40% at 0% 0%, color-mix(in oklab, var(--primary) 20%, transparent), transparent 70%),
+    radial-gradient(50% 35% at 100% 15%, color-mix(in oklab, var(--teal) 18%, transparent), transparent 70%),
+    radial-gradient(60% 40% at 50% 100%, color-mix(in oklab, var(--sunny) 10%, transparent), transparent 70%);
+  --shadow-card: 0 22px 48px -20px oklch(0.05 0.01 35 / 0.85), 0 0 0 1px oklch(1 0 0 / 0.06);
+  --shadow-glow: 0 10px 30px -6px color-mix(in oklab, var(--primary) 55%, transparent), 0 0 0 4px color-mix(in oklab, var(--primary-glow) 20%, transparent);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
+  }
+
+  html,
+  body {
+    overflow-x: clip;
   }
 
   body {
@@ -145,6 +187,7 @@
     background-attachment: fixed;
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    transition: background-color 200ms ease, color 200ms ease;
   }
 }
 
@@ -185,4 +228,3 @@
   from { opacity: 0; transform: translateY(16px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
-
