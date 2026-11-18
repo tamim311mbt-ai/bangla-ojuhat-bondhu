@@ -71,7 +71,7 @@ export function ResultCard({ result, animationKey = 0, onCopy, onAnother, onWhat
           <blockquote className="relative rounded-2xl bg-secondary p-4 text-base leading-relaxed text-secondary-foreground sm:text-[17px]">
             <span
               aria-hidden
-              className="absolute -top-3 left-3 font-display text-5xl leading-none text-primary"
+              className="absolute -top-3 left-3 font-display text-5xl font-bold leading-none text-primary"
             >
               “
             </span>
@@ -81,7 +81,7 @@ export function ResultCard({ result, animationKey = 0, onCopy, onAnother, onWhat
           <div>
             <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
               <span className="text-sm font-semibold text-muted-foreground">বিশ্বাসযোগ্যতার হার</span>
-              <span className="font-display text-xl text-primary sm:text-2xl">
+              <span className="font-display text-xl font-bold text-primary sm:text-2xl">
                 {toBanglaNumber(result.score)}% বিশ্বাসযোগ্য
               </span>
             </div>

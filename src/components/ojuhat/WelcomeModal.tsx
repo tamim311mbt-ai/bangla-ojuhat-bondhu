@@ -35,7 +35,7 @@ export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
           </DialogPrimitive.Close>
 
           <div className="flex flex-col items-center px-5 pb-5 pt-6 text-center sm:px-8 sm:pb-8 sm:pt-7">
-            <DialogPrimitive.Title className="pr-6 font-display text-3xl leading-tight text-primary sm:pr-0 sm:text-[42px]">
+            <DialogPrimitive.Title className="pr-6 font-display text-3xl font-bold leading-tight text-primary sm:pr-0 sm:text-[40px]">
               অভিনন্দন! 🎉
             </DialogPrimitive.Title>
 
@@ -50,7 +50,7 @@ export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
             <div className="relative mt-4 sm:mt-5">
               <div className="size-24 overflow-hidden rounded-full border-4 border-primary/25 bg-white shadow-card ring-4 ring-primary-glow/25 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 sm:size-36">
                 {imageError ? (
-                  <div className="flex size-full items-center justify-center bg-secondary font-display text-3xl text-primary sm:text-4xl">
+                  <div className="flex size-full items-center justify-center bg-secondary font-display text-3xl font-bold text-primary sm:text-4xl">
                     Tamim
                   </div>
                 ) : (
@@ -68,7 +68,7 @@ export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
 
             {/* Name and designation */}
             <div className="mt-3.5 sm:mt-4">
-              <h2 className="font-display text-xl leading-snug text-foreground sm:text-[26px]">
+              <h2 className="font-display text-xl font-bold leading-snug text-foreground sm:text-[24px]">
                 Motasim Billah Tamim
               </h2>
               <p className="mt-0.5 text-xs font-bold text-primary sm:text-sm">

@@ -225,7 +225,7 @@ function Index() {
             style={enterDelay(70)}
           >
             <div className="min-w-0 flex-1">
-              <p className="font-display text-2xl leading-snug sm:text-[28px] lg:text-[32px]">
+              <p className="font-display text-2xl font-bold leading-snug sm:text-[28px] lg:text-[32px]">
                 ঝামেলায় পড়েছেন? <span className="text-teal">চিন্তা নেই!</span>
               </p>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
@@ -363,7 +363,7 @@ function Index() {
                 <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <Wand2 className="size-7" />
                 </div>
-                <h2 className="mt-4 font-display text-2xl text-foreground">
+                <h2 className="mt-4 font-display text-2xl font-bold text-foreground">
                   আপনার অজুহাত এখানে তৈরি হবে
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -381,7 +381,7 @@ function Index() {
             >
               <div className="flex items-center gap-2">
                 <Sparkles className="size-5 shrink-0" />
-                <h2 className="font-display text-2xl">আজকের সেরা অজুহাত</h2>
+                <h2 className="font-display text-2xl font-bold">আজকের সেরা অজুহাত</h2>
               </div>
               <p className="mt-3 text-[15px] leading-relaxed opacity-95 sm:text-base">
                 “{daily.text}”
@@ -402,12 +402,12 @@ function Index() {
         <p className="text-xs text-muted-foreground sm:text-sm">
           ⚠️ শুধুমাত্র বিনোদনের জন্য তৈরি। ধরা পড়লে কর্তৃপক্ষ দায়ী নয়!
         </p>
-        <p className="mt-1 font-display text-lg text-primary">অজুহাত ফ্যাক্টরি</p>
+        <p className="mt-1 font-display text-lg font-bold text-primary">অজুহাত ফ্যাক্টরি</p>
         <div className="mx-auto mt-4 max-w-xs rounded-2xl border border-primary/20 bg-card/80 px-4 py-3 shadow-card">
           <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">
             তৈরি করেছেন
           </p>
-          <p className="mt-1 font-display text-xl leading-snug text-foreground">
+          <p className="mt-1 font-display text-xl font-bold leading-snug text-foreground">
             Motasim Billah Tamim
           </p>
           <p className="mt-0.5 text-xs font-semibold text-primary">CEO · অজুহাত ফ্যাক্টরি</p>

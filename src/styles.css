@@ -67,8 +67,8 @@
   --color-teal-foreground: var(--teal-foreground);
   --color-whatsapp: var(--whatsapp);
   --color-whatsapp-foreground: var(--whatsapp-foreground);
-  --font-sans: "Hind Siliguri", "Noto Sans Bengali", system-ui, sans-serif;
-  --font-display: "Galada", "Hind Siliguri", cursive;
+  --font-sans: "Montserrat", "Hind Siliguri", sans-serif;
+  --font-display: "Montserrat", "Hind Siliguri", sans-serif;
 }
 
 :root {
@@ -179,6 +179,7 @@
   html,
   body {
     overflow-x: clip;
+    font-family: "Montserrat", "Hind Siliguri", sans-serif;
   }
 
   body {

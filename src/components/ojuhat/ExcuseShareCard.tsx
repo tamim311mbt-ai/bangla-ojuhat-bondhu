@@ -26,7 +26,7 @@ export const ExcuseShareCard = forwardRef<HTMLDivElement, ExcuseShareCardProps>(
           height: "600px",
           padding: "32px",
           background: "linear-gradient(135deg, #ff6b3d 0%, #ff9f43 48%, #2096a8 100%)",
-          fontFamily: '"Hind Siliguri", "Noto Sans Bengali", system-ui, sans-serif',
+          fontFamily: '"Montserrat", "Hind Siliguri", sans-serif',
           position: "relative",
           display: "flex",
           flexDirection: "column",
