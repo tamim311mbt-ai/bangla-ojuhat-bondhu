@@ -1,9 +1,7 @@
-import { useRef, useState } from "react";
-import { toPng } from "html-to-image";
+import { useState } from "react";
 import { Copy, Download, Lightbulb, Loader2, MessageCircle, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ExcuseShareCard } from "@/components/ojuhat/ExcuseShareCard";
+import { CardCustomizerModal } from "@/components/ojuhat/CardCustomizerModal";
 import { scoreVerdict, toBanglaNumber, type GeneratedExcuse } from "@/lib/excuses";
 
 function MessengerIcon() {
@@ -39,46 +37,7 @@ export function ResultCard({
   onWhatsApp,
   onMessenger,
 }: Props) {
-  const shareCardRef = useRef<HTMLDivElement>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
-
-  const handleDownloadCard = async () => {
-    if (!shareCardRef.current || isDownloading || isStreaming) return;
-    setIsDownloading(true);
-
-    try {
-      if (typeof document !== "undefined" && "fonts" in document) {
-        await document.fonts.ready;
-      }
-
-      const captureOptions = {
-        pixelRatio: 2,
-        width: 600,
-        height: 600,
-        cacheBust: true,
-      };
-
-      let dataUrl: string;
-      try {
-        dataUrl = await toPng(shareCardRef.current, captureOptions);
-      } catch {
-        dataUrl = await toPng(shareCardRef.current, { ...captureOptions, skipFonts: true });
-      }
-
-      const link = document.createElement("a");
-      link.download = "my-ojuhat-card.png";
-      link.href = dataUrl;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toast.success("অজুহাত কার্ড ডাউনলোড হয়ে গেছে! 🖼️");
-    } catch {
-      toast.error("কার্ড তৈরি করতে সমস্যা হয়েছে, অনুগ্রহ করে আবার চেষ্টা করুন।");
-    } finally {
-      setIsDownloading(false);
-    }
-  };
+  const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
 
   return (
     <>
@@ -176,21 +135,12 @@ export function ResultCard({
             <Button
               type="button"
               size="action"
-              onClick={handleDownloadCard}
-              disabled={isDownloading || isStreaming}
+              onClick={() => setIsCustomizerOpen(true)}
+              disabled={isStreaming}
               className="flex h-auto min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-gradient-cta px-4 py-3 text-sm font-bold text-primary-foreground shadow-sm hover:brightness-105"
             >
-              {isDownloading ? (
-                <>
-                  <Loader2 className="animate-spin" aria-hidden="true" />
-                  <span>কার্ড তৈরি হচ্ছে...</span>
-                </>
-              ) : (
-                <>
-                  <Download aria-hidden="true" />
-                  <span>কার্ড ডাউনলোড করুন</span>
-                </>
-              )}
+              <Download aria-hidden="true" />
+              <span>কার্ড ডাউনলোড করুন</span>
             </Button>
             <Button
               variant="whatsapp"
@@ -226,13 +176,11 @@ export function ResultCard({
         </div>
       </section>
 
-      {/* Off-screen 1:1 social media card container for high-res PNG capture */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed left-[-9999px] top-0 z-[-1] opacity-100"
-      >
-        <ExcuseShareCard ref={shareCardRef} result={result} />
-      </div>
+      <CardCustomizerModal
+        open={isCustomizerOpen}
+        onOpenChange={setIsCustomizerOpen}
+        result={result}
+      />
     </>
   );
 }
