@@ -217,6 +217,7 @@ export interface GeneratedExcuse {
   id: string;
   target: Target;
   tone: Tone;
+  customBadge?: string | undefined;
   message: string;
   score: number;
   tip: string;
@@ -238,6 +239,10 @@ const CARD_TONE_LABELS: Record<Tone, string> = {
 
 export function formatExcuseCardBadge(target: Target, tone: Tone): string {
   return `${CARD_TARGET_LABELS[target]} • ${CARD_TONE_LABELS[tone]}`;
+}
+
+export function formatCustomExcuseBadge(tone: Tone): string {
+  return `নিজস্ব পরিস্থিতি • ${CARD_TONE_LABELS[tone]}`;
 }
 
 function pick<T>(arr: T[], rand: () => number): T {

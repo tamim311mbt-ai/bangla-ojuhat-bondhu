@@ -3,6 +3,7 @@ import { ArrowRight, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
+const LOGO_IMAGE_SRC = "/assets/aistudio/1000012711-removebg-preview_cac0c2f6.png";
 const PROFILE_IMAGE_SRC =
   "/assets/aistudio/790269062_1535420101716234_8697366622366980741_n__1__a93d140c.jpg";
 const FACEBOOK_URL = "https://www.facebook.com/pixelmbt";
@@ -34,8 +35,8 @@ export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
             <X className="size-5" />
           </DialogPrimitive.Close>
 
-          <div className="flex flex-col items-center px-5 pb-5 pt-6 text-center sm:px-8 sm:pb-8 sm:pt-7">
-            <DialogPrimitive.Title className="pr-6 font-display text-3xl font-bold leading-tight text-primary sm:pr-0 sm:text-[40px]">
+          <div className="flex flex-col items-center px-5 pb-5 pt-5 text-center sm:px-8 sm:pb-7 sm:pt-6">
+            <DialogPrimitive.Title className="pr-6 font-display text-3xl font-bold leading-tight text-primary sm:pr-0 sm:text-[38px]">
               অভিনন্দন! 🎉
             </DialogPrimitive.Title>
 
@@ -46,38 +47,49 @@ export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
               অজুহাত ফ্যাক্টরিতে আপনাকে স্বাগতম
             </p>
 
-            {/* Circular profile image */}
-            <div className="relative mt-4 sm:mt-5">
-              <div className="size-24 overflow-hidden rounded-full border-4 border-primary/25 bg-white shadow-card ring-4 ring-primary-glow/25 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 sm:size-36">
+            {/* Main Center Brand Logo */}
+            <div className="mt-3 flex justify-center sm:mt-4">
+              <div className="rounded-3xl transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 dark:bg-[#FFF9F0]/95 dark:p-2 dark:shadow-sm dark:ring-1 dark:ring-white/15">
+                <img
+                  src={LOGO_IMAGE_SRC}
+                  alt="অজুহাত ফ্যাক্টরি লোগো"
+                  width={500}
+                  height={500}
+                  className="h-auto w-[130px] object-contain drop-shadow-[0_10px_18px_rgba(15,23,42,0.14)] sm:w-[146px]"
+                />
+              </div>
+            </div>
+
+            {/* Compact Horizontal Pill Founder Badge */}
+            <div className="mt-3.5 inline-flex max-w-full items-center gap-3 rounded-full border border-slate-200/90 bg-[#F8FAFC] py-1.5 pl-1.5 pr-4 shadow-xs sm:mt-4 dark:border-border dark:bg-secondary/75">
+              <div className="size-11 shrink-0 overflow-hidden rounded-full border-2 border-primary/25 bg-white shadow-xs">
                 {imageError ? (
-                  <div className="flex size-full items-center justify-center bg-secondary font-display text-3xl font-bold text-primary sm:text-4xl">
-                    Tamim
+                  <div className="flex size-full items-center justify-center bg-secondary text-sm font-bold text-primary">
+                    T
                   </div>
                 ) : (
                   <img
                     src={PROFILE_IMAGE_SRC}
                     alt="Motasim Billah Tamim"
-                    width={400}
-                    height={400}
+                    width={88}
+                    height={88}
                     onError={() => setImageError(true)}
                     className="size-full object-cover object-top"
                   />
                 )}
               </div>
-            </div>
-
-            {/* Name and designation */}
-            <div className="mt-3.5 sm:mt-4">
-              <h2 className="font-display text-xl font-bold leading-snug text-foreground sm:text-[24px]">
-                Motasim Billah Tamim
-              </h2>
-              <p className="mt-0.5 text-xs font-bold text-primary sm:text-sm">
-                CEO · অজুহাত ফ্যাক্টরি
-              </p>
+              <div className="min-w-0 text-left">
+                <h2 className="truncate font-sans text-sm font-bold leading-tight text-slate-900 sm:text-[15px] dark:text-foreground">
+                  Motasim Billah Tamim
+                </h2>
+                <p className="mt-0.5 truncate text-xs font-semibold leading-tight text-primary">
+                  CEO • অজুহাত ফ্যাক্টরি
+                </p>
+              </div>
             </div>
 
             {/* Actions */}
-            <div className="mt-5 flex w-full flex-col gap-2.5 sm:mt-6 sm:gap-3">
+            <div className="mt-4 flex w-full flex-col gap-2.5 sm:mt-5 sm:gap-3">
               <a
                 href={FACEBOOK_URL}
                 target="_blank"

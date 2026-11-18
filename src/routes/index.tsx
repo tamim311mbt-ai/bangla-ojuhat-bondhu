@@ -1,19 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { ChevronDown, Moon, Sparkles, Sun, Wand2 } from "lucide-react";
+import { AlertCircle, ChevronDown, Loader2, Moon, Sparkles, Sun, Wand2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ExcuseLoadingCard } from "@/components/ojuhat/ExcuseLoadingCard";
 import { ResultCard } from "@/components/ojuhat/ResultCard";
 import { StatsCards } from "@/components/ojuhat/StatsCards";
 import { WelcomeModal } from "@/components/ojuhat/WelcomeModal";
 import { fireExcuseConfetti } from "@/lib/confetti";
+import { generateExcuseWithGemini } from "@/lib/gemini-excuse";
 import mascot from "@/assets/mascot.png";
 import {
   PROBLEMS,
   TARGETS,
   TONES,
   excuseOfTheDay,
-  generateExcuse,
   type Excuse,
   type GeneratedExcuse,
   type Problem,
@@ -96,9 +97,11 @@ function Index() {
   const [target, setTarget] = useState<Target>("boss");
   const [problem, setProblem] = useState<Problem>("late");
   const [tone, setTone] = useState<Tone>("real");
-  const [extra, setExtra] = useState("");
+  const [customSituation, setCustomSituation] = useState("");
   const [result, setResult] = useState<GeneratedExcuse | null>(null);
   const [resultKey, setResultKey] = useState(0);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
   const [daily, setDaily] = useState<Excuse | null>(null);
   const [welcomeOpen, setWelcomeOpen] = useState(true);
   const [isDark, setIsDark] = useState(false);
@@ -133,20 +136,43 @@ function Index() {
     }
   };
 
-  const generate = (scroll = true) => {
-    const r = generateExcuse({ target, problem, tone, extra, previousId: result?.id });
-    setResult(r);
-    setResultKey((prev) => prev + 1);
-    if (scroll) {
-      fireExcuseConfetti();
-      setExcusesCount((prev) => prev + 1);
-      void recordExcuseGenerated().then(setExcusesCount);
-    }
+  const generate = async (scroll = true) => {
+    if (isGenerating) return;
+
+    setGenerationError(null);
+    setIsGenerating(true);
+
     if (scroll && typeof window !== "undefined" && window.innerWidth < 1024) {
       setTimeout(
         () => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
         50,
       );
+    }
+
+    try {
+      const generated = await generateExcuseWithGemini({
+        target,
+        problem,
+        tone,
+        customText: customSituation,
+        previousMessage: scroll ? undefined : result?.message,
+      });
+
+      setResult(generated);
+      setResultKey((prev) => prev + 1);
+
+      if (scroll) {
+        fireExcuseConfetti();
+        setExcusesCount((prev) => prev + 1);
+        void recordExcuseGenerated().then(setExcusesCount);
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Gemini AI থেকে অজুহাত তৈরি করতে সমস্যা হয়েছে।";
+      setGenerationError(message);
+      toast.error(message);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -322,24 +348,55 @@ function Index() {
               </div>
             </fieldset>
 
-            <Field label="অতিরিক্ত কোনো তথ্য যোগ করতে চাইলে লিখুন (ঐচ্ছিক)">
+            <div className="border-t border-border/60 pt-4">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <label
+                  htmlFor="custom-situation-input"
+                  className="block text-sm font-bold sm:text-[15px]"
+                >
+                  নিজের পরিস্থিতি লিখুন (ঐচ্ছিক)
+                </label>
+                {customSituation.trim().length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomSituation("")}
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  >
+                    <X className="size-3.5" /> মুছুন
+                  </button>
+                )}
+              </div>
               <textarea
-                value={extra}
-                onChange={(e) => setExtra(e.target.value)}
-                rows={2}
-                maxLength={160}
-                placeholder="যেমন: আজ বাইরে প্রচণ্ড বৃষ্টি হচ্ছে"
-                className="w-full resize-none rounded-2xl border-2 border-border bg-card p-3.5 text-sm text-foreground outline-none transition-all duration-200 ease-out placeholder:text-muted-foreground/70 hover:border-primary/50 focus:border-primary focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--primary)_20%,transparent),0_10px_24px_-10px_color-mix(in_oklab,var(--primary)_35%,transparent)] sm:p-4 sm:text-base"
+                id="custom-situation-input"
+                value={customSituation}
+                onChange={(e) => setCustomSituation(e.target.value)}
+                rows={3}
+                maxLength={240}
+                placeholder="অথবা আপনার নিজের পরিস্থিতি লিখুন... (যেমন: বসের কাছে দেরির অজুহাত বা বন্ধুকে পচানো)"
+                className="w-full resize-none rounded-2xl border-2 border-border bg-card p-3.5 text-sm leading-relaxed text-foreground outline-none transition-all duration-200 ease-out placeholder:text-muted-foreground/75 hover:border-primary/50 focus:border-primary focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--primary)_20%,transparent),0_10px_24px_-10px_color-mix(in_oklab,var(--primary)_35%,transparent)] sm:p-4 sm:text-base"
               />
-            </Field>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                {customSituation.trim()
+                  ? "আপনার লেখা পরিস্থিতি অনুযায়ী Gemini AI মজার অজুহাত তৈরি করবে ✨"
+                  : "খালি রাখলে উপরের সিলেক্ট করা ক্যাটাগরি অনুযায়ী অজুহাত তৈরি হবে।"}
+              </p>
+            </div>
 
             <Button
               type="submit"
               variant="cta"
               size="xl"
+              disabled={isGenerating}
               className="h-14 w-full text-base sm:h-16 sm:text-lg"
             >
-              সেরা অজুহাত তৈরি করুন ✨
+              {isGenerating ? (
+                <>
+                  <Loader2 className="size-5 animate-spin" />
+                  <span>AI অজুহাত তৈরি করছে...</span>
+                </>
+              ) : (
+                "সেরা অজুহাত তৈরি করুন ✨"
+              )}
             </Button>
           </form>
         </div>
@@ -347,12 +404,39 @@ function Index() {
         {/* Right column: Generated Result Card + Excuse of the Day */}
         <div className="mt-6 space-y-6 lg:sticky lg:top-6 lg:col-span-5 lg:mt-0">
           <div ref={resultRef} className="scroll-mt-4">
-            {result ? (
+            {isGenerating ? (
+              <ExcuseLoadingCard />
+            ) : generationError ? (
+              <section
+                aria-live="assertive"
+                className="animate-pop rounded-3xl border border-destructive/40 bg-card p-5 text-center shadow-card sm:p-6"
+              >
+                <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-destructive/15 text-destructive">
+                  <AlertCircle className="size-6" />
+                </div>
+                <h2 className="mt-3 font-sans text-lg font-bold text-foreground">
+                  অজুহাত তৈরি করা যায়নি
+                </h2>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                  {generationError}
+                </p>
+                <Button
+                  type="button"
+                  variant="soft"
+                  size="action"
+                  onClick={() => void generate(true)}
+                  className="mt-4 w-full"
+                >
+                  আবার চেষ্টা করুন 🔄
+                </Button>
+              </section>
+            ) : result ? (
               <ResultCard
                 result={result}
                 animationKey={resultKey}
+                isGenerating={isGenerating}
                 onCopy={copy}
-                onAnother={() => generate(false)}
+                onAnother={() => void generate(false)}
                 onWhatsApp={whatsapp}
               />
             ) : (
@@ -367,8 +451,8 @@ function Index() {
                   আপনার অজুহাত এখানে তৈরি হবে
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  বাম দিকের ফর্ম থেকে প্রাপক, সমস্যা ও ধরন বেছে নিয়ে বাটনে ক্লিক করুন—মুহূর্তেই সেরা অজুহাত ও
-                  শেয়ারযোগ্য কার্ড রেডি হয়ে যাবে!
+                  বাম দিকের ফর্ম থেকে অপশন বেছে নিন অথবা নিজের পরিস্থিতি লিখে বাটনে ক্লিক করুন—মুহূর্তেই AI
+                  দিয়ে নতুন অজুহাত ও শেয়ারযোগ্য কার্ড রেডি হয়ে যাবে!
                 </p>
               </div>
             )}

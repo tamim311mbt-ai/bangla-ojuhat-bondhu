@@ -9,12 +9,20 @@ import { scoreVerdict, toBanglaNumber, type GeneratedExcuse } from "@/lib/excuse
 interface Props {
   result: GeneratedExcuse;
   animationKey?: number;
+  isGenerating?: boolean;
   onCopy: () => void;
   onAnother: () => void;
   onWhatsApp: () => void;
 }
 
-export function ResultCard({ result, animationKey = 0, onCopy, onAnother, onWhatsApp }: Props) {
+export function ResultCard({
+  result,
+  animationKey = 0,
+  isGenerating = false,
+  onCopy,
+  onAnother,
+  onWhatsApp,
+}: Props) {
   const shareCardRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -148,9 +156,10 @@ export function ResultCard({ result, animationKey = 0, onCopy, onAnother, onWhat
               variant="teal"
               size="action"
               onClick={onAnother}
+              disabled={isGenerating}
               className="h-auto min-h-12 py-2.5"
             >
-              <RefreshCw /> নতুন আরেকটি 🔄
+              <RefreshCw className={isGenerating ? "animate-spin" : ""} /> নতুন আরেকটি 🔄
             </Button>
           </div>
         </div>

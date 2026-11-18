@@ -15,7 +15,7 @@ function getMessageFontSize(length: number): string {
 
 export const ExcuseShareCard = forwardRef<HTMLDivElement, ExcuseShareCardProps>(
   ({ result }, ref) => {
-    const badgeLabel = formatExcuseCardBadge(result.target, result.tone);
+    const badgeLabel = result.customBadge ?? formatExcuseCardBadge(result.target, result.tone);
     const fontSize = getMessageFontSize(result.message.length);
 
     return (
