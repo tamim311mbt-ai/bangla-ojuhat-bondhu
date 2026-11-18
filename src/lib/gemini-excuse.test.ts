@@ -1,10 +1,19 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { GeminiExcuseError, generateExcuseWithGemini, resolveGeminiApiKey } from "./gemini-excuse";
+import {
+  GEMINI_MODEL,
+  GeminiExcuseError,
+  generateExcuseWithGemini,
+  resolveGeminiApiKey,
+} from "./gemini-excuse";
 
 describe("generateExcuseWithGemini", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
+  });
+
+  it("uses gemini-3.8-flash model", () => {
+    expect(GEMINI_MODEL).toBe("gemini-3.8-flash");
   });
 
   it("throws MISSING_KEY with rawDetail when both VITE_GEMINI_API_KEY and GEMINI_API_KEY are missing", async () => {

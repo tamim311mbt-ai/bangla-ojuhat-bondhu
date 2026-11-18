@@ -149,6 +149,8 @@ function classifyGeminiError(err: unknown): GeminiExcuseError {
   );
 }
 
+export const GEMINI_MODEL = "gemini-3.8-flash";
+
 export async function generateExcuseWithGemini(input: GeminiExcuseInput): Promise<GeneratedExcuse> {
   const apiKey = resolveGeminiApiKey();
 
@@ -165,7 +167,7 @@ export async function generateExcuseWithGemini(input: GeminiExcuseInput): Promis
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: GEMINI_MODEL,
       contents: buildPrompt(input),
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
