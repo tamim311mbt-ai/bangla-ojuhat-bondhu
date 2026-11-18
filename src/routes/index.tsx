@@ -229,9 +229,87 @@ function Index() {
     }
   };
 
+  const openExternalTab = (url: string) => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const whatsapp = () => {
     if (!result) return;
-    window.open(`https://wa.me/?text=${encodeURIComponent(result.message)}`, "_blank", "noopener");
+    openExternalTab(`https://wa.me/?text=${encodeURIComponent(result.message)}`);
+  };
+
+  const messenger = async () => {
+    if (!result) return;
+
+    let copied = false;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(result.message);
+        copied = true;
+      }
+    } catch {
+      copied = false;
+    }
+
+    if (!copied) {
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = result.message;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        copied = document.execCommand("copy");
+        document.body.removeChild(textarea);
+      } catch {
+        copied = false;
+      }
+    }
+
+    if (copied) {
+      toast.success("অজুহাত কপি হয়েছে! এখন মেসেঞ্জারে পেস্ট করে পাঠান 📋");
+    } else {
+      toast.error("কপি করা গেল না, মেসেঞ্জারে গিয়ে হাতে পেস্ট করুন।");
+    }
+
+    const isMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+      const messengerAppUrl = `fb-messenger://share/?link=${encodeURIComponent(window.location.href)}`;
+      let appOpened = false;
+
+      const cleanup = () => {
+        document.removeEventListener("visibilitychange", onVisibilityChange);
+        window.removeEventListener("pagehide", markOpened);
+      };
+      const markOpened = () => {
+        appOpened = true;
+        cleanup();
+      };
+      const onVisibilityChange = () => {
+        if (document.hidden) markOpened();
+      };
+
+      document.addEventListener("visibilitychange", onVisibilityChange);
+      window.addEventListener("pagehide", markOpened);
+
+      window.setTimeout(() => {
+        cleanup();
+        if (!appOpened && document.visibilityState === "visible") {
+          openExternalTab("https://messenger.com");
+        }
+      }, 1200);
+
+      window.location.href = messengerAppUrl;
+    } else {
+      openExternalTab("https://messenger.com");
+    }
   };
 
   return (
@@ -458,6 +536,7 @@ function Index() {
                 onCopy={copy}
                 onAnother={() => void generate(false)}
                 onWhatsApp={whatsapp}
+                onMessenger={() => void messenger()}
               />
             ) : (
               <div
