@@ -1,9 +1,4 @@
 import {
-  GoogleGenAI,
-  type GenerateContentConfig,
-  type GenerateContentParameters,
-} from "@google/genai";
-import {
   PROBLEMS,
   TARGETS,
   TONES,
@@ -25,21 +20,14 @@ export interface GeminiExcuseInput {
 }
 
 export interface GeminiExcuseOptions {
-  generateContentStream?:
-    | ((params: GenerateContentParameters) => Promise<AsyncIterable<{ text?: string | undefined }>>)
+  fetchStream?:
+    | ((
+        input: GeminiExcuseInput,
+        signal: AbortSignal,
+      ) => Promise<AsyncIterable<{ text?: string | undefined }>>)
     | undefined;
   onChunk?: ((partialMessage: string) => void) | undefined;
   timeoutMs?: number | undefined;
-}
-
-export function resolveGeminiApiKey(): string | undefined {
-  const viteKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
-  if (viteKey) return viteKey;
-  if (typeof process !== "undefined" && process.env) {
-    const nodeKey = process.env["GEMINI_API_KEY"]?.trim();
-    if (nodeKey) return nodeKey;
-  }
-  return undefined;
 }
 
 interface GeminiExcusePayload {
@@ -47,21 +35,6 @@ interface GeminiExcusePayload {
   score?: unknown;
   tip?: unknown;
 }
-
-const SYSTEM_INSTRUCTION = `You are "অজুহাত ফ্যাক্টরি" (Ojuhat Factory), Bangladesh's sharpest, funniest, and most relatable Bengali excuse & clever message writer.
-
-Rules:
-1. Write 100% natural Bangladeshi Bengali (স্বাভাবিক বাংলাদেশি/ঢাকাইয়া মুখের বাংলা ভাষা — e.g. মামা, বস, স্যার, আম্মু, দোস্ত, জান, রাস্তায় জ্যাম, লোডশেডিং, রিকশা, সিএনজি, বৃষ্টি, বিকাশ/নগদ, এমবি শেষ, কম্বল, চায়ের টং ইত্যাদি প্রাসঙ্গিকভাবে ব্যবহার করো). Avoid stiff textbook phrasing or West Bengal-specific dialect.
-2. Keep the response super short, punchy, and within 2 to 3 crisp sentences (under 45 words), directly ready to copy-paste or send on WhatsApp/Messenger.
-3. Never awkwardly repeat or quote the user's prompt question back—write the actual ready-to-send message directly from the sender's perspective.
-4. Match the requested tone carefully:
-   - "একদম বিশ্বাসযোগ্য": Realistic, polite, convincing with specific relatable details (score 74–96).
-   - "হাস্যকর ও উদ্ভট": Absurdly funny, creative, witty Bangladeshi humor / friendly roasting (score 8–42).
-   - "আবেগঘন": Emotional, heartwarming, sweet and dramatic (score 60–88).
-5. Output format (follow this exact plain-text order with NO markdown, NO intro, and NO surrounding quotes):
-<2 to 3 short sentences of the ready-to-send Bangladeshi Bengali message first>
-SCORE: <integer from 1 to 99>
-TIP: <1 short funny Bangladeshi Bengali delivery tip sentence>`;
 
 const PROBLEM_CONTEXT_HINTS: Record<Problem, string> = {
   late: "রাস্তায় জ্যাম, রিকশা/সিএনজি নষ্ট, বৃষ্টি বা মেট্রোরেলে দেরি",
@@ -96,11 +69,10 @@ export function buildPrompt(input: GeminiExcuseInput): string {
   const lines: string[] = [];
 
   if (custom) {
-    // Custom situation takes top priority — ignore upper dropdown selections completely to prevent conflict
     lines.push(`User's exact custom situation in Bengali: "${custom}"`);
     lines.push(`Requested tone: ${toneLabel}${toneHint ? ` (${toneHint})` : ""}`);
     lines.push(
-      "Instruction: Understand the user's exact request in Bengali (whether they are asking for an excuse, how to ask a friend for money, how to cancel a plan, etc.) and write a direct, natural, clever, and realistic 2-3 sentence Bengali response ready to send. Ignore any separate dropdown choices and do NOT quote the prompt back.",
+      "Instruction: Read the user's exact Bengali situation carefully. If a person's name is mentioned, include that exact name naturally in the response. Write a witty, realistic, 2-3 sentence Bangladeshi Bengali excuse or message tailored 100% to THIS exact situation. Never give a generic unrelated excuse.",
     );
   } else {
     const targetMeta = TARGETS.find((t) => t.value === input.target);
@@ -222,21 +194,51 @@ function parseCompletedResponse(rawText: string, input: GeminiExcuseInput): Gene
   };
 }
 
-export const GEMINI_MODEL = "gemini-3.8-flash";
+export const GEMINI_MODEL = "gemini-2.5-flash";
 export const GEMINI_MAX_OUTPUT_TOKENS = 250;
 export const GEMINI_THINKING_BUDGET = 0;
 export const GEMINI_TIMEOUT_MS = 5000;
+
+async function* fetchServerExcuseStream(
+  input: GeminiExcuseInput,
+  signal: AbortSignal,
+): AsyncIterable<{ text?: string | undefined }> {
+  const response = await fetch("/api/gemini/excuse", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+    signal,
+  });
+
+  if (!response.ok || !response.body) {
+    throw new Error(`Gemini server route failed with status ${response.status}`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      if (chunk) {
+        yield { text: chunk };
+      }
+    }
+    const tail = decoder.decode();
+    if (tail) {
+      yield { text: tail };
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
 
 export async function generateExcuseWithGemini(
   input: GeminiExcuseInput,
   options?: GeminiExcuseOptions,
 ): Promise<GeneratedExcuse> {
-  const apiKey = resolveGeminiApiKey();
-
-  if (!apiKey) {
-    return generateSmartLocalExcuse(input);
-  }
-
   const timeoutMs = options?.timeoutMs ?? GEMINI_TIMEOUT_MS;
   const controller = new AbortController();
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -250,26 +252,9 @@ export async function generateExcuseWithGemini(
   });
 
   const runGeminiCall = async (): Promise<GeneratedExcuse> => {
-    const ai = options?.generateContentStream
-      ? null
-      : new GoogleGenAI({ apiKey, apiVersion: "v1beta" });
-
-    const callStream =
-      options?.generateContentStream ??
-      ((params: GenerateContentParameters) => ai!.models.generateContentStream(params));
-
-    const config: GenerateContentConfig = {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      maxOutputTokens: GEMINI_MAX_OUTPUT_TOKENS,
-      thinkingConfig: { thinkingBudget: GEMINI_THINKING_BUDGET },
-      abortSignal: controller.signal,
-    };
-
-    const stream = await callStream({
-      model: GEMINI_MODEL,
-      contents: buildPrompt(input),
-      config,
-    });
+    const stream = options?.fetchStream
+      ? await options.fetchStream(input, controller.signal)
+      : fetchServerExcuseStream(input, controller.signal);
 
     let fullText = "";
     let lastEmitted = "";
@@ -302,7 +287,7 @@ export async function generateExcuseWithGemini(
   try {
     return await Promise.race([runGeminiCall(), timeoutPromise]);
   } catch {
-    // Silently fall back to the rich Bangladeshi Bengali dictionary on 503, 429, timeout, or any API error
+    // Silently fall back to the topic-matched & name-aware Bangladeshi Bengali offline engine
     return generateSmartLocalExcuse(input);
   } finally {
     if (timeoutId !== undefined) {

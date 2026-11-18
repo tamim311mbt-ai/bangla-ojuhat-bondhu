@@ -134,4 +134,36 @@ describe("excuse database", () => {
     expect(r.message).toMatch(/ট্রিট|দোস্ত|মামা|ভাই/);
     expect(r.customBadge).toBe(formatCustomExcuseBadge("funny"));
   });
+
+  it("matches gadget-broken custom input and includes extracted person name instead of being-late excuse", () => {
+    const r = generateSmartLocalExcuse({
+      target: "boss",
+      problem: "late",
+      tone: "real",
+      customText: "আপুর মোবাইল নষ্ট করে ফেলেছি",
+    });
+    expect(r.message).toContain("আপু");
+    expect(r.message).not.toMatch(/জ্যাম|রিকশা|ডেলিভারি|দেরি/);
+    expect(r.message).toMatch(/সফটওয়্যার|ব্যাটারি|বিড়াল|টেকনিশিয়ান|সার্ভিস/);
+  });
+
+  it("extracts named persons like রাহাত or সাকিব and incorporates them into topic-matched excuses", () => {
+    const moneyRes = generateSmartLocalExcuse({
+      target: "boss",
+      problem: "late",
+      tone: "real",
+      customText: "রাহাতকে টাকা দিতে পারছি না",
+    });
+    expect(moneyRes.message).toContain("রাহাত");
+    expect(moneyRes.message).toMatch(/বিকাশ|ব্যাংক|পেমেন্ট|খরচ/);
+
+    const weddingRes = generateSmartLocalExcuse({
+      target: "boss",
+      problem: "late",
+      tone: "real",
+      customText: "সাকিবের বিয়েতে যেতে পারবো না",
+    });
+    expect(weddingRes.message).toContain("সাকিব");
+    expect(weddingRes.message).not.toMatch(/জ্যাম|রিকশা|ডেলিভারি/);
+  });
 });

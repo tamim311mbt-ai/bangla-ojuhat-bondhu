@@ -82,40 +82,40 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "অজুহাত ফ্যাক্টরি (Ojuhat Factory) — স্মার্ট বাংলা অজুহাত জেনারেটর" },
+      { title: "Ojuhat Factory | অজুহাত ফ্যাক্টরি - মজার বাংলা অজুহাত জেনারেটর" },
       {
         name: "description",
         content:
-          "বস, শিক্ষক, বাবা-মা, বন্ধু বা ভালোবাসার মানুষের জন্য এক ক্লিকে বিশ্বাসযোগ্য, হাস্যকর ও আবেগঘন বাংলা অজুহাত তৈরি করুন ও কার্ড ডাউনলোড করুন।",
+          "অজুহাত ফ্যাক্টরি (Ojuhat Factory) — বাংলাদেশের সেরা মজার বাংলা অজুহাত জেনারেটর! Generate witty, realistic & funny Bengali excuses for boss, teacher, friends, family & partner in one click.",
       },
       {
         name: "keywords",
         content:
-          "অজুহাত ফ্যাক্টরি, Ojuhat Factory, বাংলা অজুহাত জেনারেটর, Bangla excuse generator, মজার অজুহাত, অফিসের অজুহাত, ক্লাসের অজুহাত",
+          "অজুহাত ফ্যাক্টরি, Ojuhat Factory, মজার অজুহাত জেনারেটর, বাংলা অজুহাত জেনারেটর, Bengali excuse generator, Bangla excuse generator, funny Bangla excuses, অফিসের অজুহাত, ক্লাসের অজুহাত, বন্ধুর অজুহাত",
       },
       { name: "author", content: "Motasim Billah Tamim" },
       { name: "robots", content: "index, follow" },
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "bn_BD" },
-      { property: "og:site_name", content: "অজুহাত ফ্যাক্টরি (Ojuhat Factory)" },
+      { property: "og:site_name", content: "Ojuhat Factory | অজুহাত ফ্যাক্টরি" },
       {
         property: "og:title",
-        content: "অজুহাত ফ্যাক্টরি (Ojuhat Factory) — স্মার্ট বাংলা অজুহাত জেনারেটর",
+        content: "Ojuhat Factory | অজুহাত ফ্যাক্টরি - মজার বাংলা অজুহাত জেনারেটর",
       },
       {
         property: "og:description",
         content:
-          "বস, শিক্ষক, বাবা-মা, বন্ধু বা ভালোবাসার মানুষের জন্য এক ক্লিকে বিশ্বাসযোগ্য, হাস্যকর ও আবেগঘন বাংলা অজুহাত তৈরি করুন ও কার্ড ডাউনলোড করুন।",
+          "অজুহাত ফ্যাক্টরি (Ojuhat Factory) — বাংলাদেশের সেরা মজার বাংলা অজুহাত জেনারেটর! Generate witty, realistic & funny Bengali excuses in one click.",
       },
       { name: "twitter:card", content: "summary_large_image" },
       {
         name: "twitter:title",
-        content: "অজুহাত ফ্যাক্টরি (Ojuhat Factory) — স্মার্ট বাংলা অজুহাত জেনারেটর",
+        content: "Ojuhat Factory | অজুহাত ফ্যাক্টরি - মজার বাংলা অজুহাত জেনারেটর",
       },
       {
         name: "twitter:description",
         content:
-          "বস, শিক্ষক, বাবা-মা, বন্ধু বা ভালোবাসার মানুষের জন্য এক ক্লিকে বিশ্বাসযোগ্য, হাস্যকর ও আবেগঘন বাংলা অজুহাত তৈরি করুন ও কার্ড ডাউনলোড করুন।",
+          "অজুহাত ফ্যাক্টরি (Ojuhat Factory) — বাংলাদেশের সেরা মজার বাংলা অজুহাত জেনারেটর! Generate witty, realistic & funny Bengali excuses in one click.",
       },
     ],
     links: [

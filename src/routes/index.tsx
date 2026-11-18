@@ -32,18 +32,20 @@ import {
   recordPageVisit,
 } from "@/lib/stats";
 
-const SEO_TITLE = "অজুহাত ফ্যাক্টরি (Ojuhat Factory) — স্মার্ট বাংলা অজুহাত জেনারেটর";
+const SEO_TITLE = "Ojuhat Factory | অজুহাত ফ্যাক্টরি - মজার বাংলা অজুহাত জেনারেটর";
 const SEO_DESCRIPTION =
-  "বস, শিক্ষক, বাবা-মা, বন্ধু বা ভালোবাসার মানুষের জন্য এক ক্লিকে বিশ্বাসযোগ্য, হাস্যকর ও আবেগঘন বাংলা অজুহাত তৈরি করুন ও কার্ড ডাউনলোড করুন।";
+  "অজুহাত ফ্যাক্টরি (Ojuhat Factory) — বাংলাদেশের সেরা মজার বাংলা অজুহাত জেনারেটর! Generate witty, realistic & funny Bengali excuses for boss, teacher, friends, family & partner in one click.";
+const SEO_IMAGE = "/assets/aistudio/1000012711-removebg-preview_cac0c2f6.png";
 
 const STRUCTURED_DATA = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "অজুহাত ফ্যাক্টরি (Ojuhat Factory)",
-  alternateName: "Ojuhat Factory",
-  inLanguage: "bn",
+  name: "Ojuhat Factory | অজুহাত ফ্যাক্টরি",
+  alternateName: ["অজুহাত ফ্যাক্টরি", "Ojuhat Factory", "Bengali Excuse Generator"],
+  inLanguage: ["bn", "en"],
   applicationCategory: "EntertainmentApplication",
   operatingSystem: "All",
+  url: "https://vercel.app/",
   description: SEO_DESCRIPTION,
   author: {
     "@type": "Person",
@@ -61,13 +63,20 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: SEO_TITLE },
       { name: "description", content: SEO_DESCRIPTION },
+      {
+        name: "keywords",
+        content:
+          "অজুহাত ফ্যাক্টরি, Ojuhat Factory, মজার অজুহাত জেনারেটর, বাংলা অজুহাত জেনারেটর, Bengali excuse generator, Bangla excuse generator, অফিসের অজুহাত, ক্লাসের অজুহাত",
+      },
       { property: "og:title", content: SEO_TITLE },
       { property: "og:description", content: SEO_DESCRIPTION },
+      { property: "og:image", content: SEO_IMAGE },
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "অজুহাত ফ্যাক্টরি (Ojuhat Factory)" },
+      { property: "og:site_name", content: "Ojuhat Factory | অজুহাত ফ্যাক্টরি" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: SEO_TITLE },
       { name: "twitter:description", content: SEO_DESCRIPTION },
+      { name: "twitter:image", content: SEO_IMAGE },
     ],
     scripts: [
       {
@@ -582,6 +591,36 @@ function Index() {
       </main>
 
       <footer className="mt-auto pt-8 text-center lg:pt-12">
+        <details className="group mx-auto mb-6 max-w-3xl rounded-2xl border border-border/70 bg-card/70 px-5 py-3.5 text-left shadow-sm transition-colors hover:border-primary/30">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-foreground sm:text-base">
+            <span>অজুহাত ফ্যাক্টরি কী? (About Ojuhat Factory)</span>
+            <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
+          </summary>
+          <div className="mt-3 space-y-2.5 border-t border-border/60 pt-3 text-xs leading-relaxed text-muted-foreground sm:text-sm">
+            <p>
+              <strong className="font-semibold text-foreground">
+                অজুহাত ফ্যাক্টরি (Ojuhat Factory)
+              </strong>{" "}
+              হলো বাংলাদেশের সবচেয়ে জনপ্রিয় ও স্মার্ট{" "}
+              <strong className="font-semibold text-foreground">মজার অজুহাত জেনারেটর</strong>। অফিসের
+              বস, ক্লাসের শিক্ষক, বাবা-মা, বন্ধু কিংবা ভালোবাসার মানুষের জন্য যেকোনো পরিস্থিতিতে এক ক্লিকে
+              বিশ্বাসযোগ্য, হাস্যকর বা আবেগঘন বাংলা অজুহাত তৈরি করতে পারবেন।
+            </p>
+            <p>
+              Looking for a witty{" "}
+              <strong className="font-semibold text-foreground">Bengali excuse generator</strong>?
+              Ojuhat Factory combines AI with Bangladeshi daily-life humor—covering traffic jams,
+              load-shedding, missed calls, assignments, office leave, and custom personal
+              situations—so you can copy, share on WhatsApp or Messenger, or download a shareable
+              excuse card instantly.
+            </p>
+            <p>
+              নিজের নির্দিষ্ট কোনো পরিস্থিতি বাংলায় লিখে দিলেই অজুহাত ফ্যাক্টরি আপনার জন্য একদম প্রাসঙ্গিক ও
+              স্বাভাবিক বাংলাদেশি বাংলায় নতুন অজুহাত তৈরি করে দেয়।
+            </p>
+          </div>
+        </details>
+
         <p className="text-xs text-muted-foreground sm:text-sm">
           ⚠️ শুধুমাত্র বিনোদনের জন্য তৈরি। ধরা পড়লে কর্তৃপক্ষ দায়ী নয়!
         </p>
