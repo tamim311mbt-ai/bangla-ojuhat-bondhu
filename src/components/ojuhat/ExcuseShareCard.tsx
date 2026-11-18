@@ -397,15 +397,31 @@ export const ExcuseShareCard = forwardRef<HTMLDivElement, ExcuseShareCardProps>(
           style={{
             position: "relative",
             zIndex: 1,
-            paddingTop: "14px",
+            paddingTop: "10px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "3px",
             textAlign: "center",
             color: theme.footerColor,
-            fontSize: "15px",
-            fontWeight: 700,
             textShadow: theme.footerShadow,
+            lineHeight: 1.35,
           }}
         >
-          তৈরি করা হয়েছে: অজুহাত ফ্যাক্টরি দিয়ে 😎
+          <div style={{ fontSize: "14px", fontWeight: 700 }}>
+            তৈরি করা হয়েছে: অজুহাত ফ্যাক্টরি দিয়ে 😎
+          </div>
+          <div
+            style={{
+              fontSize: "13px",
+              fontWeight: 600,
+              opacity: 0.95,
+              letterSpacing: "0.01em",
+            }}
+          >
+            ভিজিট করুন: ojuhat-factory.vercel.app
+          </div>
         </div>
       </div>
     );
