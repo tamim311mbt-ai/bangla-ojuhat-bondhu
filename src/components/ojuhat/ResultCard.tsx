@@ -10,6 +10,7 @@ interface Props {
   result: GeneratedExcuse;
   animationKey?: number;
   isGenerating?: boolean;
+  isStreaming?: boolean;
   onCopy: () => void;
   onAnother: () => void;
   onWhatsApp: () => void;
@@ -19,6 +20,7 @@ export function ResultCard({
   result,
   animationKey = 0,
   isGenerating = false,
+  isStreaming = false,
   onCopy,
   onAnother,
   onWhatsApp,
@@ -27,7 +29,7 @@ export function ResultCard({
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownloadCard = async () => {
-    if (!shareCardRef.current || isDownloading) return;
+    if (!shareCardRef.current || isDownloading || isStreaming) return;
     setIsDownloading(true);
 
     try {
@@ -67,12 +69,18 @@ export function ResultCard({
   return (
     <>
       <section
-        key={`${result.id}-${result.score}-${animationKey}`}
+        key={`result-${animationKey}`}
         aria-live="polite"
+        aria-busy={isStreaming}
         className="animate-pop overflow-hidden rounded-3xl border border-border/60 bg-card shadow-card"
       >
-        <div className="bg-gradient-cta px-4 py-3 text-primary-foreground sm:px-5">
-          <p className="text-sm font-semibold">🎁 আপনার অজুহাত প্রস্তুত!</p>
+        <div className="flex items-center justify-between gap-2 bg-gradient-cta px-4 py-3 text-primary-foreground sm:px-5">
+          <p className="text-sm font-semibold">
+            {isStreaming ? "⚡ AI লাইভ অজুহাত লিখছে..." : "🎁 আপনার অজুহাত প্রস্তুত!"}
+          </p>
+          {isStreaming && (
+            <Loader2 className="size-4 shrink-0 animate-spin opacity-90" aria-hidden="true" />
+          )}
         </div>
 
         <div className="space-y-4 p-4 sm:space-y-5 sm:p-6">
@@ -83,46 +91,69 @@ export function ResultCard({
             >
               “
             </span>
-            <p className="break-words pt-2">{result.message}</p>
+            <p className="break-words pt-2">
+              {result.message}
+              {isStreaming && (
+                <span
+                  aria-hidden="true"
+                  className="ml-1 inline-block h-[1.05em] w-[2.5px] animate-pulse rounded-full bg-primary align-middle"
+                />
+              )}
+            </p>
           </blockquote>
 
-          <div>
-            <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
-              <span className="text-sm font-semibold text-muted-foreground">বিশ্বাসযোগ্যতার হার</span>
-              <span className="font-display text-xl font-bold text-primary sm:text-2xl">
-                {toBanglaNumber(result.score)}% বিশ্বাসযোগ্য
-              </span>
+          {isStreaming ? (
+            <div className="space-y-3" aria-hidden="true">
+              <div className="h-3 w-full animate-pulse rounded-full bg-muted" />
+              <div className="rounded-2xl border-2 border-dashed border-sunny/50 bg-sunny/10 p-3.5">
+                <div className="h-3.5 w-32 animate-pulse rounded-md bg-sunny/25" />
+                <div className="mt-2 h-3 w-5/6 animate-pulse rounded-md bg-sunny/20" />
+              </div>
             </div>
-            <div
-              className="h-3.5 w-full overflow-hidden rounded-full bg-muted"
-              role="progressbar"
-              aria-valuenow={result.score}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <div
-                className="animate-bar-fill h-full origin-left rounded-full bg-gradient-score transition-[width] duration-700 ease-out"
-                style={{ width: `${result.score}%` }}
-              />
-            </div>
-            <p className="mt-2 text-sm text-muted-foreground">{scoreVerdict(result.score)}</p>
-          </div>
+          ) : (
+            <>
+              <div>
+                <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
+                  <span className="text-sm font-semibold text-muted-foreground">
+                    বিশ্বাসযোগ্যতার হার
+                  </span>
+                  <span className="font-display text-xl font-bold text-primary sm:text-2xl">
+                    {toBanglaNumber(result.score)}% বিশ্বাসযোগ্য
+                  </span>
+                </div>
+                <div
+                  className="h-3.5 w-full overflow-hidden rounded-full bg-muted"
+                  role="progressbar"
+                  aria-valuenow={result.score}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div
+                    className="animate-bar-fill h-full origin-left rounded-full bg-gradient-score transition-[width] duration-700 ease-out"
+                    style={{ width: `${result.score}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">{scoreVerdict(result.score)}</p>
+              </div>
 
-          <div className="flex gap-3 rounded-2xl border-2 border-dashed border-sunny/75 bg-sunny/15 p-3.5 sm:p-4 dark:bg-sunny/10">
-            <Lightbulb className="mt-0.5 size-5 shrink-0 text-sunny-foreground" />
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-sunny-foreground">সতর্কতা / টিপস</p>
-              <p className="mt-1 break-words text-sm leading-relaxed sm:text-[15px]">
-                {result.tip}
-              </p>
-            </div>
-          </div>
+              <div className="flex gap-3 rounded-2xl border-2 border-dashed border-sunny/75 bg-sunny/15 p-3.5 sm:p-4 dark:bg-sunny/10">
+                <Lightbulb className="mt-0.5 size-5 shrink-0 text-sunny-foreground" />
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-sunny-foreground">সতর্কতা / টিপস</p>
+                  <p className="mt-1 break-words text-sm leading-relaxed sm:text-[15px]">
+                    {result.tip}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             <Button
               variant="soft"
               size="action"
               onClick={onCopy}
+              disabled={isStreaming}
               className="h-auto min-h-12 py-2.5"
             >
               <Copy /> কপি করুন 📋
@@ -131,6 +162,7 @@ export function ResultCard({
               variant="whatsapp"
               size="action"
               onClick={onWhatsApp}
+              disabled={isStreaming}
               className="h-auto min-h-12 py-2.5"
             >
               <MessageCircle /> হোয়াটসঅ্যাপে পাঠান 📱
@@ -139,7 +171,7 @@ export function ResultCard({
               type="button"
               size="action"
               onClick={handleDownloadCard}
-              disabled={isDownloading}
+              disabled={isDownloading || isStreaming}
               className="h-auto min-h-12 rounded-xl bg-gradient-cta py-2.5 font-bold text-primary-foreground shadow-sm hover:brightness-105"
             >
               {isDownloading ? (
@@ -156,7 +188,7 @@ export function ResultCard({
               variant="teal"
               size="action"
               onClick={onAnother}
-              disabled={isGenerating}
+              disabled={isGenerating || isStreaming}
               className="h-auto min-h-12 py-2.5"
             >
               <RefreshCw className={isGenerating ? "animate-spin" : ""} /> নতুন আরেকটি 🔄

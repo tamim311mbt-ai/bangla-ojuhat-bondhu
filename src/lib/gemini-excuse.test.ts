@@ -1,9 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { GenerateContentParameters } from "@google/genai";
+import { formatCustomExcuseBadge } from "./excuses";
 import {
-  GEMINI_FALLBACK_MODELS,
+  GEMINI_MAX_OUTPUT_TOKENS,
   GEMINI_MODEL,
-  GEMINI_MODEL_FALLBACK_CHAIN,
-  GeminiExcuseError,
+  GEMINI_THINKING_BUDGET,
+  GEMINI_TIMEOUT_MS,
+  extractLiveExcuseText,
   generateExcuseWithGemini,
   resolveGeminiApiKey,
 } from "./gemini-excuse";
@@ -12,37 +15,23 @@ function makeApiError(status: number, message: string) {
   return Object.assign(new Error(message), { status });
 }
 
+async function* makeTextStream(chunks: string[]) {
+  for (const text of chunks) {
+    yield { text };
+  }
+}
+
 describe("generateExcuseWithGemini", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 
-  it("uses gemini-3.8-flash primary model and defines fallback chain", () => {
+  it("uses gemini-3.8-flash, thinkingBudget: 0, maxOutputTokens: 250, and 5s timeout", () => {
     expect(GEMINI_MODEL).toBe("gemini-3.8-flash");
-    expect(GEMINI_FALLBACK_MODELS).toEqual(["gemini-3.5-flash", "gemini-flash-latest"]);
-    expect(GEMINI_MODEL_FALLBACK_CHAIN).toEqual([
-      "gemini-3.8-flash",
-      "gemini-3.5-flash",
-      "gemini-flash-latest",
-    ]);
-  });
-
-  it("throws MISSING_KEY with rawDetail when both VITE_GEMINI_API_KEY and GEMINI_API_KEY are missing", async () => {
-    vi.stubEnv("VITE_GEMINI_API_KEY", "");
-    vi.stubEnv("GEMINI_API_KEY", "");
-
-    await expect(
-      generateExcuseWithGemini({
-        target: "boss",
-        problem: "late",
-        tone: "funny",
-      }),
-    ).rejects.toMatchObject({
-      name: "GeminiExcuseError",
-      code: "MISSING_KEY",
-      rawDetail: expect.stringContaining("VITE_GEMINI_API_KEY"),
-    } satisfies Partial<GeminiExcuseError>);
+    expect(GEMINI_THINKING_BUDGET).toBe(0);
+    expect(GEMINI_MAX_OUTPUT_TOKENS).toBe(250);
+    expect(GEMINI_TIMEOUT_MS).toBe(5000);
   });
 
   it("falls back to process.env.GEMINI_API_KEY when VITE_GEMINI_API_KEY is unset", () => {
@@ -59,136 +48,127 @@ describe("generateExcuseWithGemini", () => {
     expect(resolveGeminiApiKey()).toBe("AQ.vite_test_key");
   });
 
-  it("retries gemini-3.8-flash once on 503 and succeeds without hitting fallback", async () => {
-    vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.test_key");
-    const calls: string[] = [];
+  it("silently falls back to smart local Bengali excuse when API key is missing", async () => {
+    vi.stubEnv("VITE_GEMINI_API_KEY", "");
+    vi.stubEnv("GEMINI_API_KEY", "");
 
-    const generateContent = vi.fn(async ({ model }: { model?: string }) => {
-      calls.push(model ?? "");
-      if (calls.length === 1) {
-        throw makeApiError(503, '{"error":{"code":503,"status":"UNAVAILABLE"}}');
-      }
-      return {
-        text: JSON.stringify({
-          message: "বস, রাস্তায় পানি জমে রিকশা আটকে গেছে।",
-          score: 88,
-          tip: "একটু ভেজা চুলের সেলফি রেডি রাখুন!",
-        }),
-      };
+    const result = await generateExcuseWithGemini({
+      target: "boss",
+      problem: "late",
+      tone: "funny",
+      customText: "মিরপুরে বৃষ্টি আর জ্যাম",
+    });
+
+    expect(result.message).toContain("মিরপুরে বৃষ্টি আর জ্যাম");
+    expect(result.customBadge).toBe(formatCustomExcuseBadge("funny"));
+    expect(result.score).toBeGreaterThanOrEqual(1);
+    expect(result.score).toBeLessThanOrEqual(99);
+  });
+
+  it("streams Bengali text word-by-word with thinkingBudget: 0 and maxOutputTokens: 250", async () => {
+    vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.test_key");
+    const emitted: string[] = [];
+    let capturedConfig: GenerateContentParameters["config"];
+
+    const generateContentStream = vi.fn(async (params: GenerateContentParameters) => {
+      capturedConfig = params.config;
+      return makeTextStream([
+        "বস, রাস্তায় ",
+        "পানি জমে ",
+        "রিকশা আটকে গেছে।",
+        "\nSC",
+        "ORE: 88\n",
+        "TIP: একটু ভেজা চুলের সেলফি রেডি রাখুন!",
+      ]);
     });
 
     const result = await generateExcuseWithGemini(
       { target: "boss", problem: "late", tone: "real" },
-      { generateContent, retryDelayMs: 0 },
+      {
+        generateContentStream,
+        onChunk: (partial) => emitted.push(partial),
+      },
     );
 
-    expect(calls).toEqual(["gemini-3.8-flash", "gemini-3.8-flash"]);
-    expect(result.message).toContain("বস");
-    expect(result.score).toBe(88);
-  });
-
-  it("falls back from gemini-3.8-flash to gemini-3.5-flash on persistent 503", async () => {
-    vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.test_key");
-    const calls: string[] = [];
-
-    const generateContent = vi.fn(async ({ model }: { model?: string }) => {
-      calls.push(model ?? "");
-      if (model === "gemini-3.8-flash") {
-        throw makeApiError(503, "High demand temporary error");
-      }
-      return {
-        text: JSON.stringify({
-          message: "মামা, জ্যামে পড়ে জীবন শেষ হয়ে যাচ্ছে!",
-          score: 79,
-          tip: "গলার স্বর একটু ক্লান্ত শোনান!",
-        }),
-      };
+    expect(capturedConfig).toMatchObject({
+      maxOutputTokens: 250,
+      thinkingConfig: { thinkingBudget: 0 },
     });
-
-    const result = await generateExcuseWithGemini(
-      { target: "friend", problem: "late", tone: "real" },
-      { generateContent, retryDelayMs: 0 },
-    );
-
-    expect(calls).toEqual(["gemini-3.8-flash", "gemini-3.8-flash", "gemini-3.5-flash"]);
-    expect(result.message).toContain("মামা");
-  });
-
-  it("falls back through gemini-3.5-flash to gemini-flash-latest on 429 and 503", async () => {
-    vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.test_key");
-    const calls: string[] = [];
-
-    const generateContent = vi.fn(async ({ model }: { model?: string }) => {
-      calls.push(model ?? "");
-      if (model === "gemini-3.8-flash") {
-        throw makeApiError(429, "RESOURCE_EXHAUSTED");
-      }
-      if (model === "gemini-3.5-flash") {
-        throw makeApiError(503, "UNAVAILABLE");
-      }
-      return {
-        text: JSON.stringify({
-          message: "আম্মু, কোচিংয়ের স্যার আটকে রেখেছিলেন!",
-          score: 84,
-          tip: "বাড়ি ঢুকে সরাসরি পড়ার টেবিলে বসুন!",
-        }),
-      };
-    });
-
-    const result = await generateExcuseWithGemini(
-      { target: "parents", problem: "late", tone: "real" },
-      { generateContent, retryDelayMs: 0 },
-    );
-
-    expect(calls).toEqual([
-      "gemini-3.8-flash",
-      "gemini-3.8-flash",
-      "gemini-3.5-flash",
-      "gemini-flash-latest",
+    expect(emitted).toEqual([
+      "বস, রাস্তায় ",
+      "বস, রাস্তায় পানি জমে ",
+      "বস, রাস্তায় পানি জমে রিকশা আটকে গেছে।",
     ]);
-    expect(result.message).toContain("আম্মু");
+    expect(result.message).toBe("বস, রাস্তায় পানি জমে রিকশা আটকে গেছে।");
+    expect(result.score).toBe(88);
+    expect(result.tip).toBe("একটু ভেজা চুলের সেলফি রেডি রাখুন!");
   });
 
-  it("does not retry or fall back on 401/403 invalid API key errors", async () => {
-    vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.bad_key");
+  it("extractLiveExcuseText strips partial SCORE/TIP markers cleanly", () => {
+    expect(extractLiveExcuseText("মামা, নেট চলে গেছে।\nSC")).toBe("মামা, নেট চলে গেছে।");
+    expect(extractLiveExcuseText("মামা, নেট চলে গেছে।\nSCORE: 91\nTIP: চুপ থাকো।")).toBe(
+      "মামা, নেট চলে গেছে।",
+    );
+  });
+
+  it("silently falls back to local excuse dictionary on 503 without slow retries", async () => {
+    vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.test_key");
     const calls: string[] = [];
 
-    const generateContent = vi.fn(async ({ model }: { model?: string }) => {
-      calls.push(model ?? "");
-      throw makeApiError(403, "API_KEY_INVALID");
+    const generateContentStream = vi.fn(async (params: GenerateContentParameters) => {
+      calls.push(params.model);
+      throw makeApiError(503, '{"error":{"code":503,"status":"UNAVAILABLE"}}');
     });
 
-    await expect(
-      generateExcuseWithGemini(
-        { target: "boss", problem: "late", tone: "funny" },
-        { generateContent, retryDelayMs: 0 },
-      ),
-    ).rejects.toMatchObject({
-      name: "GeminiExcuseError",
-      code: "INVALID_KEY",
-    });
+    const result = await generateExcuseWithGemini(
+      {
+        target: "friend",
+        problem: "event",
+        tone: "funny",
+        customText: "বন্ধুকে পচানো",
+      },
+      { generateContentStream },
+    );
 
     expect(calls).toEqual(["gemini-3.8-flash"]);
+    expect(result.message.length).toBeGreaterThan(10);
+    expect(result.customBadge).toBe(formatCustomExcuseBadge("funny"));
   });
 
-  it("throws SERVER_BUSY with attempt trail when all fallback models return 503", async () => {
+  it("silently falls back to local excuse dictionary on 429 rate limit", async () => {
     vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.test_key");
 
-    const generateContent = vi.fn(async () => {
-      throw makeApiError(503, "This model is currently experiencing high demand");
+    const generateContentStream = vi.fn(async () => {
+      throw makeApiError(429, "RESOURCE_EXHAUSTED");
     });
 
-    await expect(
-      generateExcuseWithGemini(
-        { target: "boss", problem: "late", tone: "funny" },
-        { generateContent, retryDelayMs: 0 },
-      ),
-    ).rejects.toMatchObject({
-      name: "GeminiExcuseError",
-      code: "SERVER_BUSY",
-      rawDetail: expect.stringContaining(
-        "gemini-3.8-flash#1(503) -> gemini-3.8-flash#2(503) -> gemini-3.5-flash#1(503) -> gemini-flash-latest#1(503)",
-      ),
-    });
+    const result = await generateExcuseWithGemini(
+      { target: "partner", problem: "call", tone: "emotional" },
+      { generateContentStream },
+    );
+
+    expect(generateContentStream).toHaveBeenCalledTimes(1);
+    expect(result.target).toBe("partner");
+    expect(result.tone).toBe("emotional");
+    expect(result.message.length).toBeGreaterThan(10);
+  });
+
+  it("silently falls back to local excuse dictionary when Gemini times out", async () => {
+    vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.test_key");
+
+    const generateContentStream = vi.fn(
+      () =>
+        new Promise<AsyncIterable<{ text?: string | undefined }>>(() => {
+          // Never resolves to simulate stalled connection
+        }),
+    );
+
+    const result = await generateExcuseWithGemini(
+      { target: "teacher", problem: "work", tone: "real", customText: "অ্যাসাইনমেন্ট বাকি" },
+      { generateContentStream, timeoutMs: 30 },
+    );
+
+    expect(result.message).toContain("অ্যাসাইনমেন্ট বাকি");
+    expect(result.target).toBe("teacher");
   });
 });

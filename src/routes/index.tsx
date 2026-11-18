@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { AlertCircle, ChevronDown, Loader2, Moon, Sparkles, Sun, Wand2, X } from "lucide-react";
+import { ChevronDown, Loader2, Moon, Sparkles, Sun, Wand2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ExcuseLoadingCard } from "@/components/ojuhat/ExcuseLoadingCard";
@@ -8,13 +8,15 @@ import { ResultCard } from "@/components/ojuhat/ResultCard";
 import { StatsCards } from "@/components/ojuhat/StatsCards";
 import { WelcomeModal } from "@/components/ojuhat/WelcomeModal";
 import { fireExcuseConfetti } from "@/lib/confetti";
-import { GeminiExcuseError, generateExcuseWithGemini } from "@/lib/gemini-excuse";
+import { generateExcuseWithGemini } from "@/lib/gemini-excuse";
 import mascot from "@/assets/mascot.png";
 import {
   PROBLEMS,
   TARGETS,
   TONES,
   excuseOfTheDay,
+  formatCustomExcuseBadge,
+  generateSmartLocalExcuse,
   type Excuse,
   type GeneratedExcuse,
   type Problem,
@@ -101,10 +103,7 @@ function Index() {
   const [result, setResult] = useState<GeneratedExcuse | null>(null);
   const [resultKey, setResultKey] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationError, setGenerationError] = useState<{
-    message: string;
-    detail?: string | undefined;
-  } | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [daily, setDaily] = useState<Excuse | null>(null);
   const [welcomeOpen, setWelcomeOpen] = useState(true);
   const [isDark, setIsDark] = useState(false);
@@ -142,8 +141,8 @@ function Index() {
   const generate = async (scroll = true) => {
     if (isGenerating) return;
 
-    setGenerationError(null);
     setIsGenerating(true);
+    setIsStreaming(false);
 
     if (scroll && typeof window !== "undefined" && window.innerWidth < 1024) {
       setTimeout(
@@ -152,35 +151,70 @@ function Index() {
       );
     }
 
-    try {
-      const generated = await generateExcuseWithGemini({
-        target,
-        problem,
-        tone,
-        customText: customSituation,
-        previousMessage: scroll ? undefined : result?.message,
-      });
+    let hasReceivedFirstChunk = false;
+    const trimmedCustom = customSituation.trim();
+    const previousMessage = scroll ? undefined : result?.message;
 
+    try {
+      const generated = await generateExcuseWithGemini(
+        {
+          target,
+          problem,
+          tone,
+          customText: customSituation,
+          previousMessage,
+        },
+        {
+          onChunk: (partialMessage) => {
+            if (!hasReceivedFirstChunk) {
+              hasReceivedFirstChunk = true;
+              setIsStreaming(true);
+              setResultKey((prev) => prev + 1);
+            }
+            setResult({
+              id: "streaming",
+              target,
+              tone,
+              ...(trimmedCustom ? { customBadge: formatCustomExcuseBadge(tone) } : {}),
+              message: partialMessage,
+              score: tone === "funny" ? 28 : tone === "emotional" ? 76 : 85,
+              tip: "",
+            });
+          },
+        },
+      );
+
+      if (!hasReceivedFirstChunk) {
+        setResultKey((prev) => prev + 1);
+      }
+      setIsStreaming(false);
       setResult(generated);
-      setResultKey((prev) => prev + 1);
 
       if (scroll) {
         fireExcuseConfetti();
         setExcusesCount((prev) => prev + 1);
         void recordExcuseGenerated().then(setExcusesCount);
       }
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Gemini AI থেকে অজুহাত তৈরি করতে সমস্যা হয়েছে।";
-      const detail =
-        err instanceof GeminiExcuseError
-          ? err.rawDetail
-          : err instanceof Error
-            ? err.message
-            : String(err);
-      setGenerationError({ message, detail });
-      toast.error(message);
+    } catch {
+      const fallback = generateSmartLocalExcuse({
+        target,
+        problem,
+        tone,
+        customText: customSituation,
+        previousMessage,
+      });
+      if (!hasReceivedFirstChunk) {
+        setResultKey((prev) => prev + 1);
+      }
+      setIsStreaming(false);
+      setResult(fallback);
+      if (scroll) {
+        fireExcuseConfetti();
+        setExcusesCount((prev) => prev + 1);
+        void recordExcuseGenerated().then(setExcusesCount);
+      }
     } finally {
+      setIsStreaming(false);
       setIsGenerating(false);
     }
   };
@@ -234,7 +268,7 @@ function Index() {
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <span className="hidden rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground sm:inline-flex">
-            ৬৮+ অজুহাত
+            ১,০০০+ অজুহাত
           </span>
           <button
             type="button"
@@ -413,42 +447,14 @@ function Index() {
         {/* Right column: Generated Result Card + Excuse of the Day */}
         <div className="mt-6 space-y-6 lg:sticky lg:top-6 lg:col-span-5 lg:mt-0">
           <div ref={resultRef} className="scroll-mt-4">
-            {isGenerating ? (
+            {isGenerating && !isStreaming ? (
               <ExcuseLoadingCard />
-            ) : generationError ? (
-              <section
-                aria-live="assertive"
-                className="animate-pop rounded-3xl border border-destructive/40 bg-card p-5 text-center shadow-card sm:p-6"
-              >
-                <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-destructive/15 text-destructive">
-                  <AlertCircle className="size-6" />
-                </div>
-                <h2 className="mt-3 font-sans text-lg font-bold text-foreground">
-                  অজুহাত তৈরি করা যায়নি
-                </h2>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                  {generationError.message}
-                </p>
-                {generationError.detail && (
-                  <p className="mt-2 break-words rounded-xl bg-muted/70 px-3 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
-                    {generationError.detail}
-                  </p>
-                )}
-                <Button
-                  type="button"
-                  variant="soft"
-                  size="action"
-                  onClick={() => void generate(true)}
-                  className="mt-4 w-full"
-                >
-                  আবার চেষ্টা করুন 🔄
-                </Button>
-              </section>
             ) : result ? (
               <ResultCard
                 result={result}
                 animationKey={resultKey}
                 isGenerating={isGenerating}
+                isStreaming={isStreaming}
                 onCopy={copy}
                 onAnother={() => void generate(false)}
                 onWhatsApp={whatsapp}
