@@ -19,12 +19,30 @@ describe("excuse database", () => {
     clearSeenExcuses();
   });
 
-  it("provides at least 567 distinct base excuses (all previous + 150 brand-new entries)", () => {
-    expect(EXCUSES.length).toBeGreaterThanOrEqual(567);
+  it("provides at least 1167 distinct base excuses across all 13 categories", () => {
+    expect(EXCUSES.length).toBeGreaterThanOrEqual(1167);
     const uniqueIds = new Set(EXCUSES.map((e) => e.id));
     const uniqueTexts = new Set(EXCUSES.map((e) => e.text));
     expect(uniqueIds.size).toBe(EXCUSES.length);
     expect(uniqueTexts.size).toBe(EXCUSES.length);
+  });
+
+  it("keeps all 5 original problem categories and includes all 8 new Bangladeshi categories", () => {
+    expect(PROBLEMS.map((p) => p.value)).toEqual([
+      "late",
+      "work",
+      "event",
+      "call",
+      "money",
+      "loan_delay",
+      "missed_reply",
+      "avoid_treat",
+      "assignment_missed",
+      "leave_request",
+      "cancel_plan",
+      "no_charge_net",
+      "overslept",
+    ]);
   });
 
   it("provides over 1,000+ total unique excuse variations via base + combinator", () => {
@@ -86,27 +104,34 @@ describe("excuse database", () => {
     expect(formatExcuseCardBadge(r.target, r.tone)).toBe("অফিসের বসের জন্য • হাস্যকর অজুহাত");
   });
 
-  it("dynamically inserts custom text in generateSmartLocalExcuse", () => {
+  it("overrides dropdowns via custom text keywords without pasting raw user text", () => {
+    const customInput = "বন্ধুর কাছে টাকা ধার চাইবো কীভাবে বলবো";
     const r = generateSmartLocalExcuse({
       target: "boss",
       problem: "late",
       tone: "real",
-      customText: "মিরপুর রাস্তায় জ্যাম",
+      customText: customInput,
     });
-    expect(r.message).toContain("মিরপুর রাস্তায় জ্যাম");
+    expect(r.target).toBe("friend");
+    expect(r.message).not.toContain(customInput);
+    expect(r.message).not.toContain("এর কারণেই একটু আটকে গেছি");
+    expect(r.message).toMatch(/টাকা|ধার|দোস্ত|মামা|ভাই/);
     expect(r.customBadge).toBe(formatCustomExcuseBadge("real"));
     expect(r.score).toBeGreaterThanOrEqual(1);
     expect(r.score).toBeLessThanOrEqual(99);
   });
 
-  it("handles roast requests gracefully in generateSmartLocalExcuse", () => {
+  it("handles roast requests naturally without pasting the prompt text inside quotes", () => {
+    const customInput = "বন্ধুকে পচানো যখন সে ট্রিট দেয় না";
     const r = generateSmartLocalExcuse({
-      target: "friend",
-      problem: "event",
+      target: "boss",
+      problem: "late",
       tone: "funny",
-      customText: "বন্ধুকে পচানো যখন সে ট্রিট দেয় না",
+      customText: customInput,
     });
-    expect(r.message).toContain("ট্রিট দেয় না");
+    expect(r.target).toBe("friend");
+    expect(r.message).not.toContain(customInput);
+    expect(r.message).toMatch(/ট্রিট|দোস্ত|মামা|ভাই/);
     expect(r.customBadge).toBe(formatCustomExcuseBadge("funny"));
   });
 });

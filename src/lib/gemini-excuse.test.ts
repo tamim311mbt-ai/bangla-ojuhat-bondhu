@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { GenerateContentParameters } from "@google/genai";
-import { formatCustomExcuseBadge } from "./excuses";
+import { PROBLEMS, formatCustomExcuseBadge } from "./excuses";
 import {
   GEMINI_MAX_OUTPUT_TOKENS,
   GEMINI_MODEL,
   GEMINI_THINKING_BUDGET,
   GEMINI_TIMEOUT_MS,
+  buildPrompt,
   extractLiveExcuseText,
   generateExcuseWithGemini,
   resolveGeminiApiKey,
@@ -48,18 +49,47 @@ describe("generateExcuseWithGemini", () => {
     expect(resolveGeminiApiKey()).toBe("AQ.vite_test_key");
   });
 
-  it("silently falls back to smart local Bengali excuse when API key is missing", async () => {
+  it("prioritizes custom text in Gemini prompt and ignores upper dropdown selections", () => {
+    const prompt = buildPrompt({
+      target: "boss",
+      problem: "late",
+      tone: "real",
+      customText: "বন্ধুর কাছে টাকা ধার চাইবো কীভাবে বলবো",
+    });
+
+    expect(prompt).toContain("বন্ধুর কাছে টাকা ধার চাইবো কীভাবে বলবো");
+    expect(prompt).not.toContain("প্রাপক:");
+    expect(prompt).not.toContain("সমস্যা:");
+    expect(prompt).not.toContain("পৌঁছাতে দেরি হচ্ছে");
+  });
+
+  it("builds contextual Bangladeshi Gemini prompts for every dropdown problem category", () => {
+    for (const p of PROBLEMS) {
+      const prompt = buildPrompt({
+        target: "friend",
+        problem: p.value,
+        tone: "funny",
+      });
+      expect(prompt).toContain(p.label);
+      expect(prompt).toContain("প্রাসঙ্গিক বাংলাদেশি প্রেক্ষাপট:");
+    }
+  });
+
+  it("silently falls back to relevant local Bengali excuse without pasting raw custom text", async () => {
     vi.stubEnv("VITE_GEMINI_API_KEY", "");
     vi.stubEnv("GEMINI_API_KEY", "");
 
+    const customInput = "মিরপুরে বৃষ্টি আর জ্যাম তাই অফিসে দেরি হচ্ছে";
     const result = await generateExcuseWithGemini({
-      target: "boss",
-      problem: "late",
+      target: "friend",
+      problem: "avoid_treat",
       tone: "funny",
-      customText: "মিরপুরে বৃষ্টি আর জ্যাম",
+      customText: customInput,
     });
 
-    expect(result.message).toContain("মিরপুরে বৃষ্টি আর জ্যাম");
+    expect(result.target).toBe("boss");
+    expect(result.message).not.toContain(customInput);
+    expect(result.message).not.toContain("এর কারণেই একটু আটকে গেছি");
     expect(result.customBadge).toBe(formatCustomExcuseBadge("funny"));
     expect(result.score).toBeGreaterThanOrEqual(1);
     expect(result.score).toBeLessThanOrEqual(99);
@@ -143,7 +173,7 @@ describe("generateExcuseWithGemini", () => {
     });
 
     const result = await generateExcuseWithGemini(
-      { target: "partner", problem: "call", tone: "emotional" },
+      { target: "partner", problem: "overslept", tone: "emotional" },
       { generateContentStream },
     );
 
@@ -153,7 +183,7 @@ describe("generateExcuseWithGemini", () => {
     expect(result.message.length).toBeGreaterThan(10);
   });
 
-  it("silently falls back to local excuse dictionary when Gemini times out", async () => {
+  it("silently falls back to keyword-matched local excuse when Gemini times out", async () => {
     vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.test_key");
 
     const generateContentStream = vi.fn(
@@ -163,12 +193,14 @@ describe("generateExcuseWithGemini", () => {
         }),
     );
 
+    const customInput = "অ্যাসাইনমেন্ট জমা দিতে পারিনি";
     const result = await generateExcuseWithGemini(
-      { target: "teacher", problem: "work", tone: "real", customText: "অ্যাসাইনমেন্ট বাকি" },
+      { target: "boss", problem: "late", tone: "real", customText: customInput },
       { generateContentStream, timeoutMs: 30 },
     );
 
-    expect(result.message).toContain("অ্যাসাইনমেন্ট বাকি");
     expect(result.target).toBe("teacher");
+    expect(result.message).not.toContain(customInput);
+    expect(result.message).not.toContain("এর কারণেই একটু আটকে গেছি");
   });
 });
