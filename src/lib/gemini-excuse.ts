@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, type GenerateContentParameters } from "@google/genai";
 import {
   PROBLEMS,
   TARGETS,
@@ -18,15 +18,20 @@ export interface GeminiExcuseInput {
   previousMessage?: string | undefined;
 }
 
+export interface GeminiExcuseOptions {
+  generateContent?:
+    ((params: GenerateContentParameters) => Promise<{ text?: string | undefined }>) | undefined;
+  retryDelayMs?: number | undefined;
+}
+
+export type GeminiExcuseErrorCode =
+  "MISSING_KEY" | "INVALID_KEY" | "RATE_LIMIT" | "SERVER_BUSY" | "EMPTY_RESPONSE" | "API_ERROR";
+
 export class GeminiExcuseError extends Error {
-  code: "MISSING_KEY" | "INVALID_KEY" | "RATE_LIMIT" | "EMPTY_RESPONSE" | "API_ERROR";
+  code: GeminiExcuseErrorCode;
   rawDetail?: string | undefined;
 
-  constructor(
-    code: "MISSING_KEY" | "INVALID_KEY" | "RATE_LIMIT" | "EMPTY_RESPONSE" | "API_ERROR",
-    message: string,
-    rawDetail?: string | undefined,
-  ) {
+  constructor(code: GeminiExcuseErrorCode, message: string, rawDetail?: string | undefined) {
     super(message);
     this.name = "GeminiExcuseError";
     this.code = code;
@@ -100,10 +105,27 @@ function buildPrompt(input: GeminiExcuseInput): string {
   return lines.join("\n");
 }
 
+function extractStatusCode(err: unknown): number | undefined {
+  if (err && typeof err === "object") {
+    const status = (err as { status?: unknown }).status;
+    if (typeof status === "number" && Number.isFinite(status)) {
+      return status;
+    }
+    const code = (err as { code?: unknown }).code;
+    if (typeof code === "number" && Number.isFinite(code)) {
+      return code;
+    }
+  }
+  const msg = err instanceof Error ? err.message : typeof err === "string" ? err : "";
+  const match = msg.match(/\b(401|403|404|429|500|502|503|504)\b/);
+  return match ? Number(match[1]) : undefined;
+}
+
 function extractRawErrorMessage(err: unknown): string {
   if (err instanceof Error) {
-    const status = (err as { status?: unknown }).status;
-    const prefix = typeof status === "number" ? `[HTTP ${status}] ` : "";
+    const status = extractStatusCode(err);
+    const hasPrefix = typeof status === "number" && !err.message.includes(`[HTTP ${status}]`);
+    const prefix = hasPrefix ? `[HTTP ${status}] ` : "";
     return `${prefix}${err.message || err.name}`;
   }
   if (typeof err === "string") return err;
@@ -114,44 +136,118 @@ function extractRawErrorMessage(err: unknown): string {
   }
 }
 
-function classifyGeminiError(err: unknown): GeminiExcuseError {
-  if (err instanceof GeminiExcuseError) return err;
-
-  const rawDetail = extractRawErrorMessage(err);
-  const normalized = rawDetail.toLowerCase();
-
-  if (
+export function isInvalidKeyError(err: unknown): boolean {
+  const status = extractStatusCode(err);
+  if (status === 401 || status === 403) return true;
+  const normalized = extractRawErrorMessage(err).toLowerCase();
+  return (
     normalized.includes("api_key_invalid") ||
     normalized.includes("api key not valid") ||
-    normalized.includes("permission_denied") ||
-    normalized.includes("403") ||
-    normalized.includes("401")
-  ) {
+    normalized.includes("permission_denied")
+  );
+}
+
+export function isTransientCapacityError(err: unknown): boolean {
+  if (isInvalidKeyError(err)) return false;
+  const status = extractStatusCode(err);
+  if (status === 503 || status === 429 || status === 500 || status === 502 || status === 504) {
+    return true;
+  }
+  const normalized = extractRawErrorMessage(err).toLowerCase();
+  return (
+    normalized.includes("503") ||
+    normalized.includes("429") ||
+    normalized.includes("unavailable") ||
+    normalized.includes("high demand") ||
+    normalized.includes("overloaded") ||
+    normalized.includes("resource_exhausted") ||
+    normalized.includes("too many requests") ||
+    normalized.includes("try again later")
+  );
+}
+
+export function isModelNotFoundError(err: unknown): boolean {
+  if (isInvalidKeyError(err)) return false;
+  const status = extractStatusCode(err);
+  if (status === 404) return true;
+  const normalized = extractRawErrorMessage(err).toLowerCase();
+  return normalized.includes("not_found") || normalized.includes("model not found");
+}
+
+function classifyGeminiError(err: unknown, attemptTrail?: string[]): GeminiExcuseError {
+  if (err instanceof GeminiExcuseError) {
+    if (attemptTrail && attemptTrail.length > 1 && err.rawDetail) {
+      return new GeminiExcuseError(
+        err.code,
+        err.message,
+        `${err.rawDetail} | Attempts: ${attemptTrail.join(" -> ")}`,
+      );
+    }
+    return err;
+  }
+
+  const rawDetail = extractRawErrorMessage(err);
+  const trailSuffix =
+    attemptTrail && attemptTrail.length > 1 ? ` | Attempts: ${attemptTrail.join(" -> ")}` : "";
+  const fullDetail = `${rawDetail}${trailSuffix}`;
+  const normalized = rawDetail.toLowerCase();
+
+  if (isInvalidKeyError(err)) {
     return new GeminiExcuseError(
       "INVALID_KEY",
       "Gemini API কী সঠিক নয় বা অনুমোদিত নয়। অনুগ্রহ করে VITE_GEMINI_API_KEY যাচাই করুন।",
-      rawDetail,
+      fullDetail,
     );
   }
 
-  if (normalized.includes("429") || normalized.includes("resource_exhausted")) {
+  if (
+    extractStatusCode(err) === 429 ||
+    normalized.includes("429") ||
+    normalized.includes("resource_exhausted")
+  ) {
     return new GeminiExcuseError(
       "RATE_LIMIT",
       "অনেক বেশি অনুরোধ পাঠানো হয়েছে, একটু অপেক্ষা করে আবার চেষ্টা করুন।",
-      rawDetail,
+      fullDetail,
+    );
+  }
+
+  if (
+    extractStatusCode(err) === 503 ||
+    normalized.includes("503") ||
+    normalized.includes("unavailable") ||
+    normalized.includes("high demand") ||
+    normalized.includes("overloaded")
+  ) {
+    return new GeminiExcuseError(
+      "SERVER_BUSY",
+      "Gemini সার্ভারে সাময়িকভাবে প্রচুর চাপ চলছে। অনুগ্রহ করে কয়েক সেকেন্ড পর আবার চেষ্টা করুন।",
+      fullDetail,
     );
   }
 
   return new GeminiExcuseError(
     "API_ERROR",
     "Gemini AI থেকে উত্তর আনতে সমস্যা হয়েছে। ইন্টারনেট সংযোগ বা API কী চেক করে আবার চেষ্টা করুন।",
-    rawDetail,
+    fullDetail,
   );
 }
 
-export const GEMINI_MODEL = "gemini-3.8-flash";
+function sleep(ms: number): Promise<void> {
+  if (ms <= 0) return Promise.resolve();
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-export async function generateExcuseWithGemini(input: GeminiExcuseInput): Promise<GeneratedExcuse> {
+export const GEMINI_MODEL = "gemini-3.8-flash";
+export const GEMINI_FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-flash-latest"] as const;
+export const GEMINI_MODEL_FALLBACK_CHAIN = [GEMINI_MODEL, ...GEMINI_FALLBACK_MODELS] as const;
+
+const DEFAULT_RETRY_DELAY_MS = 550;
+
+export async function generateExcuseWithGemini(
+  input: GeminiExcuseInput,
+  options?: GeminiExcuseOptions,
+): Promise<GeneratedExcuse> {
   const apiKey = resolveGeminiApiKey();
 
   if (!apiKey) {
@@ -162,95 +258,151 @@ export async function generateExcuseWithGemini(input: GeminiExcuseInput): Promis
     );
   }
 
-  const ai = new GoogleGenAI({ apiKey, apiVersion: "v1beta" });
-  const custom = input.customText?.trim();
+  const ai = options?.generateContent ? null : new GoogleGenAI({ apiKey, apiVersion: "v1beta" });
+  const callGenerateContent =
+    options?.generateContent ??
+    ((params: GenerateContentParameters) => ai!.models.generateContent(params));
+  const retryDelayMs = options?.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: buildPrompt(input),
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            message: {
-              type: Type.STRING,
-              description: "Natural Bangladeshi Bengali excuse or witty reply (2-4 sentences).",
-            },
-            score: {
-              type: Type.INTEGER,
-              description: "Believability percentage score from 1 to 99.",
-            },
-            tip: {
-              type: Type.STRING,
-              description: "Funny 1-sentence Bangladeshi Bengali delivery tip or warning.",
-            },
-          },
-          required: ["message", "score", "tip"],
+  const custom = input.customText?.trim();
+  const prompt = buildPrompt(input);
+  const config: GenerateContentParameters["config"] = {
+    systemInstruction: SYSTEM_INSTRUCTION,
+    responseMimeType: "application/json",
+    responseSchema: {
+      type: Type.OBJECT,
+      properties: {
+        message: {
+          type: Type.STRING,
+          description: "Natural Bangladeshi Bengali excuse or witty reply (2-4 sentences).",
+        },
+        score: {
+          type: Type.INTEGER,
+          description: "Believability percentage score from 1 to 99.",
+        },
+        tip: {
+          type: Type.STRING,
+          description: "Funny 1-sentence Bangladeshi Bengali delivery tip or warning.",
         },
       },
-    });
+      required: ["message", "score", "tip"],
+    },
+  };
 
-    const rawText = (response.text ?? "").trim();
-    if (!rawText) {
-      throw new GeminiExcuseError(
-        "EMPTY_RESPONSE",
-        "AI কোনো উত্তর তৈরি করতে পারেনি, অনুগ্রহ করে আবার চেষ্টা করুন।",
-        "Gemini returned an empty response.text payload.",
-      );
+  // Execution plan:
+  // 1. Try gemini-3.8-flash (and retry once on 503/429 transient errors)
+  // 2. Fall back to gemini-3.5-flash
+  // 3. Fall back to gemini-flash-latest
+  const modelAttempts: Array<{ model: string; maxAttempts: number }> = [
+    { model: GEMINI_MODEL, maxAttempts: 2 },
+    ...GEMINI_FALLBACK_MODELS.map((model) => ({ model, maxAttempts: 1 })),
+  ];
+
+  const attemptTrail: string[] = [];
+  let lastError: unknown;
+
+  for (let mIdx = 0; mIdx < modelAttempts.length; mIdx++) {
+    const entry = modelAttempts[mIdx];
+    if (!entry) continue;
+
+    const hasNextModel = mIdx < modelAttempts.length - 1;
+
+    for (let attempt = 1; attempt <= entry.maxAttempts; attempt++) {
+      try {
+        const response = await callGenerateContent({
+          model: entry.model,
+          contents: prompt,
+          config,
+        });
+
+        const rawText = (response.text ?? "").trim();
+        if (!rawText) {
+          throw new GeminiExcuseError(
+            "EMPTY_RESPONSE",
+            "AI কোনো উত্তর তৈরি করতে পারেনি, অনুগ্রহ করে আবার চেষ্টা করুন।",
+            `Gemini (${entry.model}) returned an empty response.text payload.`,
+          );
+        }
+
+        let parsed: GeminiExcusePayload;
+        try {
+          parsed = JSON.parse(rawText) as GeminiExcusePayload;
+        } catch {
+          return {
+            id: `gemini-${Date.now()}`,
+            target: input.target,
+            tone: input.tone,
+            ...(custom ? { customBadge: formatCustomExcuseBadge(input.tone) } : {}),
+            message: rawText.replace(/^["“]+|["”]+$/g, ""),
+            score: input.tone === "funny" ? 28 : input.tone === "emotional" ? 76 : 85,
+            tip: "মেসেজটা পাঠানোর সময় মুখে একদম সিরিয়াস ভাব ধরে রাখুন!",
+          };
+        }
+
+        const message = typeof parsed.message === "string" ? parsed.message.trim() : "";
+        if (!message) {
+          throw new GeminiExcuseError(
+            "EMPTY_RESPONSE",
+            "AI থেকে অজুহাত পাওয়া যায়নি, অনুগ্রহ করে আবার চেষ্টা করুন।",
+            `Parsed JSON missing message field (${entry.model}): ${rawText.slice(0, 200)}`,
+          );
+        }
+
+        const rawScore =
+          typeof parsed.score === "number" && Number.isFinite(parsed.score)
+            ? Math.round(parsed.score)
+            : input.tone === "funny"
+              ? 28
+              : input.tone === "emotional"
+                ? 76
+                : 85;
+        const score = Math.max(1, Math.min(99, rawScore));
+
+        const tip =
+          typeof parsed.tip === "string" && parsed.tip.trim()
+            ? parsed.tip.trim()
+            : "মেসেজটা পাঠানোর সময় একদম নিষ্পাপ চেহারা বানিয়ে রাখুন!";
+
+        return {
+          id: `gemini-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          target: input.target,
+          tone: input.tone,
+          ...(custom ? { customBadge: formatCustomExcuseBadge(input.tone) } : {}),
+          message,
+          score,
+          tip,
+        };
+      } catch (err) {
+        lastError = err;
+        const status = extractStatusCode(err);
+        attemptTrail.push(`${entry.model}#${attempt}${status ? `(${status})` : ""}`);
+
+        // Never retry or fall back on invalid/unauthorized API keys
+        if (isInvalidKeyError(err)) {
+          throw classifyGeminiError(err, attemptTrail);
+        }
+
+        const canRetrySameModel = attempt < entry.maxAttempts && isTransientCapacityError(err);
+        if (canRetrySameModel) {
+          await sleep(retryDelayMs);
+          continue;
+        }
+
+        const shouldFallbackToNextModel =
+          hasNextModel &&
+          (isTransientCapacityError(err) ||
+            isModelNotFoundError(err) ||
+            (err instanceof GeminiExcuseError && err.code === "EMPTY_RESPONSE"));
+
+        if (shouldFallbackToNextModel) {
+          await sleep(Math.min(retryDelayMs, 250));
+          break;
+        }
+
+        throw classifyGeminiError(err, attemptTrail);
+      }
     }
-
-    let parsed: GeminiExcusePayload;
-    try {
-      parsed = JSON.parse(rawText) as GeminiExcusePayload;
-    } catch {
-      return {
-        id: `gemini-${Date.now()}`,
-        target: input.target,
-        tone: input.tone,
-        ...(custom ? { customBadge: formatCustomExcuseBadge(input.tone) } : {}),
-        message: rawText.replace(/^["“]+|["”]+$/g, ""),
-        score: input.tone === "funny" ? 28 : input.tone === "emotional" ? 76 : 85,
-        tip: "মেসেজটা পাঠানোর সময় মুখে একদম সিরিয়াস ভাব ধরে রাখুন!",
-      };
-    }
-
-    const message = typeof parsed.message === "string" ? parsed.message.trim() : "";
-    if (!message) {
-      throw new GeminiExcuseError(
-        "EMPTY_RESPONSE",
-        "AI থেকে অজুহাত পাওয়া যায়নি, অনুগ্রহ করে আবার চেষ্টা করুন।",
-        `Parsed JSON missing message field: ${rawText.slice(0, 200)}`,
-      );
-    }
-
-    const rawScore =
-      typeof parsed.score === "number" && Number.isFinite(parsed.score)
-        ? Math.round(parsed.score)
-        : input.tone === "funny"
-          ? 28
-          : input.tone === "emotional"
-            ? 76
-            : 85;
-    const score = Math.max(1, Math.min(99, rawScore));
-
-    const tip =
-      typeof parsed.tip === "string" && parsed.tip.trim()
-        ? parsed.tip.trim()
-        : "মেসেজটা পাঠানোর সময় একদম নিষ্পাপ চেহারা বানিয়ে রাখুন!";
-
-    return {
-      id: `gemini-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      target: input.target,
-      tone: input.tone,
-      ...(custom ? { customBadge: formatCustomExcuseBadge(input.tone) } : {}),
-      message,
-      score,
-      tip,
-    };
-  } catch (err) {
-    throw classifyGeminiError(err);
   }
+
+  throw classifyGeminiError(lastError, attemptTrail);
 }
