@@ -20,15 +20,28 @@ export interface GeminiExcuseInput {
 
 export class GeminiExcuseError extends Error {
   code: "MISSING_KEY" | "INVALID_KEY" | "RATE_LIMIT" | "EMPTY_RESPONSE" | "API_ERROR";
+  rawDetail?: string | undefined;
 
   constructor(
     code: "MISSING_KEY" | "INVALID_KEY" | "RATE_LIMIT" | "EMPTY_RESPONSE" | "API_ERROR",
     message: string,
+    rawDetail?: string | undefined,
   ) {
     super(message);
     this.name = "GeminiExcuseError";
     this.code = code;
+    this.rawDetail = rawDetail;
   }
+}
+
+export function resolveGeminiApiKey(): string | undefined {
+  const viteKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+  if (viteKey) return viteKey;
+  if (typeof process !== "undefined" && process.env) {
+    const nodeKey = process.env["GEMINI_API_KEY"]?.trim();
+    if (nodeKey) return nodeKey;
+  }
+  return undefined;
 }
 
 interface GeminiExcusePayload {
@@ -87,11 +100,25 @@ function buildPrompt(input: GeminiExcuseInput): string {
   return lines.join("\n");
 }
 
+function extractRawErrorMessage(err: unknown): string {
+  if (err instanceof Error) {
+    const status = (err as { status?: unknown }).status;
+    const prefix = typeof status === "number" ? `[HTTP ${status}] ` : "";
+    return `${prefix}${err.message || err.name}`;
+  }
+  if (typeof err === "string") return err;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}
+
 function classifyGeminiError(err: unknown): GeminiExcuseError {
   if (err instanceof GeminiExcuseError) return err;
 
-  const rawMsg = err instanceof Error ? err.message : String(err);
-  const normalized = rawMsg.toLowerCase();
+  const rawDetail = extractRawErrorMessage(err);
+  const normalized = rawDetail.toLowerCase();
 
   if (
     normalized.includes("api_key_invalid") ||
@@ -103,6 +130,7 @@ function classifyGeminiError(err: unknown): GeminiExcuseError {
     return new GeminiExcuseError(
       "INVALID_KEY",
       "Gemini API কী সঠিক নয় বা অনুমোদিত নয়। অনুগ্রহ করে VITE_GEMINI_API_KEY যাচাই করুন।",
+      rawDetail,
     );
   }
 
@@ -110,26 +138,29 @@ function classifyGeminiError(err: unknown): GeminiExcuseError {
     return new GeminiExcuseError(
       "RATE_LIMIT",
       "অনেক বেশি অনুরোধ পাঠানো হয়েছে, একটু অপেক্ষা করে আবার চেষ্টা করুন।",
+      rawDetail,
     );
   }
 
   return new GeminiExcuseError(
     "API_ERROR",
     "Gemini AI থেকে উত্তর আনতে সমস্যা হয়েছে। ইন্টারনেট সংযোগ বা API কী চেক করে আবার চেষ্টা করুন।",
+    rawDetail,
   );
 }
 
 export async function generateExcuseWithGemini(input: GeminiExcuseInput): Promise<GeneratedExcuse> {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+  const apiKey = resolveGeminiApiKey();
 
   if (!apiKey) {
     throw new GeminiExcuseError(
       "MISSING_KEY",
-      "Gemini API কী (VITE_GEMINI_API_KEY) সেট করা নেই। .env ফাইলে VITE_GEMINI_API_KEY যোগ করুন।",
+      "Gemini API কী (VITE_GEMINI_API_KEY) সেট করা নেই। অনুগ্রহ করে এনভায়রনমেন্ট ভ্যারিয়েবলে VITE_GEMINI_API_KEY যোগ করুন।",
+      "Missing API key: import.meta.env.VITE_GEMINI_API_KEY and process.env.GEMINI_API_KEY are both empty.",
     );
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey, apiVersion: "v1beta" });
   const custom = input.customText?.trim();
 
   try {
@@ -165,6 +196,7 @@ export async function generateExcuseWithGemini(input: GeminiExcuseInput): Promis
       throw new GeminiExcuseError(
         "EMPTY_RESPONSE",
         "AI কোনো উত্তর তৈরি করতে পারেনি, অনুগ্রহ করে আবার চেষ্টা করুন।",
+        "Gemini returned an empty response.text payload.",
       );
     }
 
@@ -188,6 +220,7 @@ export async function generateExcuseWithGemini(input: GeminiExcuseInput): Promis
       throw new GeminiExcuseError(
         "EMPTY_RESPONSE",
         "AI থেকে অজুহাত পাওয়া যায়নি, অনুগ্রহ করে আবার চেষ্টা করুন।",
+        `Parsed JSON missing message field: ${rawText.slice(0, 200)}`,
       );
     }
 

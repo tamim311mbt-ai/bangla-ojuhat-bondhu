@@ -8,7 +8,7 @@ import { ResultCard } from "@/components/ojuhat/ResultCard";
 import { StatsCards } from "@/components/ojuhat/StatsCards";
 import { WelcomeModal } from "@/components/ojuhat/WelcomeModal";
 import { fireExcuseConfetti } from "@/lib/confetti";
-import { generateExcuseWithGemini } from "@/lib/gemini-excuse";
+import { GeminiExcuseError, generateExcuseWithGemini } from "@/lib/gemini-excuse";
 import mascot from "@/assets/mascot.png";
 import {
   PROBLEMS,
@@ -101,7 +101,10 @@ function Index() {
   const [result, setResult] = useState<GeneratedExcuse | null>(null);
   const [resultKey, setResultKey] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [generationError, setGenerationError] = useState<{
+    message: string;
+    detail?: string | undefined;
+  } | null>(null);
   const [daily, setDaily] = useState<Excuse | null>(null);
   const [welcomeOpen, setWelcomeOpen] = useState(true);
   const [isDark, setIsDark] = useState(false);
@@ -169,7 +172,13 @@ function Index() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Gemini AI থেকে অজুহাত তৈরি করতে সমস্যা হয়েছে।";
-      setGenerationError(message);
+      const detail =
+        err instanceof GeminiExcuseError
+          ? err.rawDetail
+          : err instanceof Error
+            ? err.message
+            : String(err);
+      setGenerationError({ message, detail });
       toast.error(message);
     } finally {
       setIsGenerating(false);
@@ -418,8 +427,13 @@ function Index() {
                   অজুহাত তৈরি করা যায়নি
                 </h2>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                  {generationError}
+                  {generationError.message}
                 </p>
+                {generationError.detail && (
+                  <p className="mt-2 break-words rounded-xl bg-muted/70 px-3 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                    {generationError.detail}
+                  </p>
+                )}
                 <Button
                   type="button"
                   variant="soft"
