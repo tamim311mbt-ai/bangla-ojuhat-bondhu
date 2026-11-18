@@ -170,16 +170,31 @@ function Index() {
       <WelcomeModal open={welcomeOpen} onOpenChange={setWelcomeOpen} />
 
       <header
-        className="animate-enter flex items-center justify-between gap-2 border-b border-border/60 pb-4 sm:gap-4"
+        className="animate-enter flex items-center justify-between gap-2.5 border-b border-border/60 pb-3.5 sm:gap-4 sm:pb-4"
         style={enterDelay(0)}
       >
-        <div className="min-w-0">
-          <h1 className="font-display text-3xl leading-tight text-primary sm:text-4xl">
-            অজুহাত ফ্যাক্টরি
-          </h1>
-          <p className="text-xs font-medium text-muted-foreground sm:text-sm">
-            এখানে যত্ন সহকারে নিখুঁত অজুহাত তৈরি করা হয় 🏭
-          </p>
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-4">
+          <a
+            href="/"
+            aria-label="অজুহাত ফ্যাক্টরি"
+            className="shrink-0 rounded-2xl transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-[#FFF9F0]/95 dark:p-1.5 dark:shadow-sm dark:ring-1 dark:ring-white/15"
+          >
+            <img
+              src="/assets/aistudio/1000012711-removebg-preview_cac0c2f6.png"
+              alt="অজুহাত ফ্যাক্টরি লোগো"
+              width={500}
+              height={500}
+              loading="eager"
+              decoding="async"
+              className="h-14 w-auto object-contain sm:h-[4.75rem] lg:h-[5.5rem]"
+            />
+          </a>
+          <div className="min-w-0">
+            <h1 className="sr-only">অজুহাত ফ্যাক্টরি</h1>
+            <p className="text-xs font-semibold leading-snug text-muted-foreground sm:text-sm lg:text-[15px]">
+              এখানে যত্ন সহকারে নিখুঁত অজুহাত তৈরি করা হয় 🏭
+            </p>
+          </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
