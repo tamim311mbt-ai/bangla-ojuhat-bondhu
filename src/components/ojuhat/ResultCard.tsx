@@ -4,18 +4,6 @@ import { Button } from "@/components/ui/button";
 import { CardCustomizerModal } from "@/components/ojuhat/CardCustomizerModal";
 import { scoreVerdict, toBanglaNumber, type GeneratedExcuse } from "@/lib/excuses";
 
-function MessengerIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="size-4 shrink-0">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M12 2C6.477 2 2 6.145 2 11.259c0 2.913 1.454 5.512 3.726 7.21V22l3.405-1.869c.909.252 1.872.388 2.869.388 5.523 0 10-4.145 10-9.259C22 6.145 17.523 2 12 2zm.993 11.748l-2.548-2.718-4.97 2.718 5.468-5.805 2.61 2.718 4.908-2.718-5.468 5.805z"
-      />
-    </svg>
-  );
-}
-
 interface Props {
   result: GeneratedExcuse;
   animationKey?: number;
@@ -24,7 +12,6 @@ interface Props {
   onCopy: () => void;
   onAnother: () => void;
   onWhatsApp: () => void;
-  onMessenger: () => void;
 }
 
 export function ResultCard({
@@ -35,7 +22,6 @@ export function ResultCard({
   onCopy,
   onAnother,
   onWhatsApp,
-  onMessenger,
 }: Props) {
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
 
@@ -147,20 +133,10 @@ export function ResultCard({
               size="action"
               onClick={onWhatsApp}
               disabled={isStreaming}
-              className="flex h-auto min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap px-4 py-3 text-sm"
+              className="flex h-auto min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap px-4 py-3 text-sm sm:col-span-2 lg:col-span-1"
             >
               <MessageCircle aria-hidden="true" />
               <span>হোয়াটসঅ্যাপে পাঠান</span>
-            </Button>
-            <Button
-              type="button"
-              size="action"
-              onClick={onMessenger}
-              disabled={isStreaming}
-              className="flex h-auto min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-r from-[#0084FF] to-[#A033FF] px-4 py-3 text-sm font-bold text-white shadow-sm hover:brightness-105"
-            >
-              <MessengerIcon />
-              <span>মেসেঞ্জারে পাঠান</span>
             </Button>
             <Button
               variant="teal"

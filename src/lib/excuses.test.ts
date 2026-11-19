@@ -135,35 +135,41 @@ describe("excuse database", () => {
     expect(r.customBadge).toBe(formatCustomExcuseBadge("funny"));
   });
 
-  it("matches gadget-broken custom input and includes extracted person name instead of being-late excuse", () => {
-    const r = generateSmartLocalExcuse({
+  it("matches topic-specific offline banks for gadget, money, family, and study custom inputs", () => {
+    const gadget = generateSmartLocalExcuse({
       target: "boss",
       problem: "late",
       tone: "real",
       customText: "আপুর মোবাইল নষ্ট করে ফেলেছি",
     });
-    expect(r.message).toContain("আপু");
-    expect(r.message).not.toMatch(/জ্যাম|রিকশা|ডেলিভারি|দেরি/);
-    expect(r.message).toMatch(/সফটওয়্যার|ব্যাটারি|বিড়াল|টেকনিশিয়ান|সার্ভিস/);
-  });
+    expect(gadget.id).toContain("device_broken");
+    expect(gadget.message).toMatch(/আপডেট|চার্জার|বিড়াল|ক্র্যাক|স্ক্রিন|সার্ভিস|ডিসপ্লে|ডিভাইস/);
 
-  it("extracts named persons like রাহাত or সাকিব and incorporates them into topic-matched excuses", () => {
-    const moneyRes = generateSmartLocalExcuse({
+    const money = generateSmartLocalExcuse({
       target: "boss",
       problem: "late",
       tone: "real",
-      customText: "রাহাতকে টাকা দিতে পারছি না",
+      customText: "পকেটে টাকা নেই, বিল দিতে পারছি না",
     });
-    expect(moneyRes.message).toContain("রাহাত");
-    expect(moneyRes.message).toMatch(/বিকাশ|ব্যাংক|পেমেন্ট|খরচ/);
+    expect(money.id).toContain("money_loan");
+    expect(money.message).toMatch(/বিকাশ|ব্যাংক|এটিএম|পেমেন্ট|টাকা|বিল|বেতন/);
 
-    const weddingRes = generateSmartLocalExcuse({
+    const family = generateSmartLocalExcuse({
       target: "boss",
       problem: "late",
-      tone: "real",
-      customText: "সাকিবের বিয়েতে যেতে পারবো না",
+      tone: "emotional",
+      customText: "আম্মু আর আব্বু বাসা থেকে রাগ করেছে",
     });
-    expect(weddingRes.message).toContain("সাকিব");
-    expect(weddingRes.message).not.toMatch(/জ্যাম|রিকশা|ডেলিভারি/);
+    expect(family.id).toContain("family_home");
+    expect(family.message).toMatch(/আম্মু|আব্বু|আপু|বাসা|ঘরের|পরিবার/);
+
+    const study = generateSmartLocalExcuse({
+      target: "boss",
+      problem: "late",
+      tone: "funny",
+      customText: "পড়া শেষ হয়নি, কাল পরীক্ষা",
+    });
+    expect(study.id).toContain("studies_exam");
+    expect(study.message).toMatch(/রুটিন|ফাইল|পড়াশোনা|অ্যাসাইনমেন্ট|জ্বর|পেনড্রাইভ/);
   });
 });

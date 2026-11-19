@@ -1,8 +1,16 @@
+import { GoogleGenAI } from "@google/genai";
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
-import { handleGeminiExcuseRequest } from "./lib/gemini-server";
+import {
+  GEMINI_MAX_OUTPUT_TOKENS,
+  GEMINI_MODEL,
+  GEMINI_THINKING_BUDGET,
+  buildPrompt,
+  resolveSystemInstruction,
+  type GeminiExcuseInput,
+} from "./lib/gemini-excuse";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -45,6 +53,45 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+async function handleApiExcuse(request: Request): Promise<Response> {
+  const apiKey = process.env["GEMINI_API_KEY"]?.trim();
+  if (!apiKey) {
+    return Response.json({ error: "GEMINI_API_KEY is not configured" }, { status: 503 });
+  }
+
+  try {
+    const input = (await request.json()) as GeminiExcuseInput;
+    const ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build",
+        },
+      },
+    });
+
+    const response = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: buildPrompt(input),
+      config: {
+        systemInstruction: resolveSystemInstruction(input),
+        maxOutputTokens: GEMINI_MAX_OUTPUT_TOKENS,
+        thinkingConfig: { thinkingBudget: GEMINI_THINKING_BUDGET },
+      },
+    });
+
+    const text = response.text?.trim() ?? "";
+    if (!text) {
+      return Response.json({ error: "Empty Gemini response" }, { status: 502 });
+    }
+
+    return Response.json({ text });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Gemini request failed";
+    return Response.json({ error: message }, { status: 502 });
+  }
+}
+
 // Hosting compresses every response at the edge. Never compress a body (gzip, brotli,
 // CompressionStream) or set content-encoding here or in a server route: the body gets encoded
 // twice and renders garbled.
@@ -52,9 +99,10 @@ export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const url = new URL(request.url);
-      if (url.pathname === "/api/gemini/excuse") {
-        return await handleGeminiExcuseRequest(request);
+      if (request.method === "POST" && url.pathname === "/api/excuse") {
+        return await handleApiExcuse(request);
       }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

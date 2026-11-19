@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { GenerateContentParameters } from "@google/genai";
 import { PROBLEMS, formatCustomExcuseBadge } from "./excuses";
 import {
+  CUSTOM_SYSTEM_INSTRUCTION,
   GEMINI_MAX_OUTPUT_TOKENS,
   GEMINI_MODEL,
   GEMINI_THINKING_BUDGET,
@@ -8,6 +10,8 @@ import {
   buildPrompt,
   extractLiveExcuseText,
   generateExcuseWithGemini,
+  resolveGeminiApiKey,
+  resolveSystemInstruction,
 } from "./gemini-excuse";
 
 function makeApiError(status: number, message: string) {
@@ -22,6 +26,7 @@ async function* makeTextStream(chunks: string[]) {
 
 describe("generateExcuseWithGemini", () => {
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 
@@ -32,18 +37,38 @@ describe("generateExcuseWithGemini", () => {
     expect(GEMINI_TIMEOUT_MS).toBe(5000);
   });
 
-  it("prioritizes custom text in Gemini prompt and ignores upper dropdown selections", () => {
-    const prompt = buildPrompt({
-      target: "boss",
-      problem: "late",
-      tone: "real",
+  it("falls back to process.env.GEMINI_API_KEY when VITE_GEMINI_API_KEY is unset", () => {
+    vi.stubEnv("VITE_GEMINI_API_KEY", "");
+    vi.stubEnv("GEMINI_API_KEY", "AQ.fallback_test_key");
+
+    expect(resolveGeminiApiKey()).toBe("AQ.fallback_test_key");
+  });
+
+  it("prefers VITE_GEMINI_API_KEY over process.env.GEMINI_API_KEY", () => {
+    vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.vite_test_key");
+    vi.stubEnv("GEMINI_API_KEY", "AQ.node_test_key");
+
+    expect(resolveGeminiApiKey()).toBe("AQ.vite_test_key");
+  });
+
+  it("prioritizes custom text in Gemini prompt with custom system instruction and ignores dropdowns", () => {
+    const input = {
+      target: "boss" as const,
+      problem: "late" as const,
+      tone: "real" as const,
       customText: "আপুর মোবাইল নষ্ট করে ফেলেছি",
-    });
+    };
+    const prompt = buildPrompt(input);
+    const sys = resolveSystemInstruction(input);
 
     expect(prompt).toContain("আপুর মোবাইল নষ্ট করে ফেলেছি");
     expect(prompt).not.toContain("প্রাপক:");
     expect(prompt).not.toContain("সমস্যা:");
     expect(prompt).not.toContain("পৌঁছাতে দেরি হচ্ছে");
+    expect(sys).toBe(CUSTOM_SYSTEM_INSTRUCTION);
+    expect(sys).toContain(
+      "Do NOT talk about traffic or being late unless the user asked about being late.",
+    );
   });
 
   it("builds contextual Bangladeshi Gemini prompts for every dropdown problem category", () => {
@@ -58,36 +83,63 @@ describe("generateExcuseWithGemini", () => {
     }
   });
 
-  it("streams Bengali text word-by-word from server stream", async () => {
-    const emitted: string[] = [];
+  it("silently falls back to relevant local Bengali excuse without pasting raw custom text", async () => {
+    vi.stubEnv("VITE_GEMINI_API_KEY", "");
+    vi.stubEnv("GEMINI_API_KEY", "");
 
-    const fetchStream = vi.fn(async () =>
-      makeTextStream([
-        "আপু, বিশ্বাস করো ",
-        "সফটওয়্যার আপডেট ",
-        "নিতে গিয়েই ফোনটা হ্যাং হয়ে গেছে।",
+    const customInput = "মিরপুরে বৃষ্টি আর জ্যাম তাই অফিসে দেরি হচ্ছে";
+    const result = await generateExcuseWithGemini({
+      target: "friend",
+      problem: "avoid_treat",
+      tone: "funny",
+      customText: customInput,
+    });
+
+    expect(result.target).toBe("boss");
+    expect(result.message).not.toContain(customInput);
+    expect(result.message).not.toContain("এর কারণেই একটু আটকে গেছি");
+    expect(result.customBadge).toBe(formatCustomExcuseBadge("funny"));
+    expect(result.score).toBeGreaterThanOrEqual(1);
+    expect(result.score).toBeLessThanOrEqual(99);
+  });
+
+  it("streams Bengali text word-by-word with thinkingBudget: 0 and maxOutputTokens: 250", async () => {
+    vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.test_key");
+    const emitted: string[] = [];
+    let capturedConfig: GenerateContentParameters["config"];
+
+    const generateContentStream = vi.fn(async (params: GenerateContentParameters) => {
+      capturedConfig = params.config;
+      return makeTextStream([
+        "বস, রাস্তায় ",
+        "পানি জমে ",
+        "রিকশা আটকে গেছে।",
         "\nSC",
         "ORE: 88\n",
-        "TIP: একদম নিষ্পাপ চেহারা রাখো!",
-      ]),
-    );
+        "TIP: একটু ভেজা চুলের সেলফি রেডি রাখুন!",
+      ]);
+    });
 
     const result = await generateExcuseWithGemini(
-      { target: "boss", problem: "late", tone: "real", customText: "আপুর মোবাইল নষ্ট করে ফেলেছি" },
+      { target: "boss", problem: "late", tone: "real" },
       {
-        fetchStream,
+        generateContentStream,
         onChunk: (partial) => emitted.push(partial),
       },
     );
 
+    expect(capturedConfig).toMatchObject({
+      maxOutputTokens: 250,
+      thinkingConfig: { thinkingBudget: 0 },
+    });
     expect(emitted).toEqual([
-      "আপু, বিশ্বাস করো ",
-      "আপু, বিশ্বাস করো সফটওয়্যার আপডেট ",
-      "আপু, বিশ্বাস করো সফটওয়্যার আপডেট নিতে গিয়েই ফোনটা হ্যাং হয়ে গেছে।",
+      "বস, রাস্তায় ",
+      "বস, রাস্তায় পানি জমে ",
+      "বস, রাস্তায় পানি জমে রিকশা আটকে গেছে।",
     ]);
-    expect(result.message).toBe("আপু, বিশ্বাস করো সফটওয়্যার আপডেট নিতে গিয়েই ফোনটা হ্যাং হয়ে গেছে।");
+    expect(result.message).toBe("বস, রাস্তায় পানি জমে রিকশা আটকে গেছে।");
     expect(result.score).toBe(88);
-    expect(result.tip).toBe("একদম নিষ্পাপ চেহারা রাখো!");
+    expect(result.tip).toBe("একটু ভেজা চুলের সেলফি রেডি রাখুন!");
   });
 
   it("extractLiveExcuseText strips partial SCORE/TIP markers cleanly", () => {
@@ -97,42 +149,82 @@ describe("generateExcuseWithGemini", () => {
     );
   });
 
-  it("falls back to topic-matched & name-aware Bengali excuse on server error", async () => {
-    const fetchStream = vi.fn(async () => {
+  it("silently falls back to local excuse dictionary on 503 without slow retries", async () => {
+    vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.test_key");
+    const calls: string[] = [];
+
+    const generateContentStream = vi.fn(async (params: GenerateContentParameters) => {
+      calls.push(params.model);
       throw makeApiError(503, '{"error":{"code":503,"status":"UNAVAILABLE"}}');
     });
 
     const result = await generateExcuseWithGemini(
       {
-        target: "boss",
-        problem: "late",
-        tone: "real",
-        customText: "আপুর মোবাইল নষ্ট করে ফেলেছি",
+        target: "friend",
+        problem: "event",
+        tone: "funny",
+        customText: "বন্ধুকে পচানো",
       },
-      { fetchStream },
+      { generateContentStream },
     );
 
-    expect(result.message).toContain("আপু");
-    expect(result.message).not.toMatch(/জ্যাম|রিকশা|ডেলিভারি/);
-    expect(result.customBadge).toBe(formatCustomExcuseBadge("real"));
+    expect(calls).toEqual(["gemini-2.5-flash"]);
+    expect(result.message.length).toBeGreaterThan(10);
+    expect(result.customBadge).toBe(formatCustomExcuseBadge("funny"));
   });
 
-  it("falls back to keyword-matched local excuse when Gemini times out", async () => {
-    const fetchStream = vi.fn(
+  it("falls back to phone/gadget topic bank when custom situation is about breaking a phone", async () => {
+    vi.stubEnv("VITE_GEMINI_API_KEY", "");
+    vi.stubEnv("GEMINI_API_KEY", "");
+
+    const result = await generateExcuseWithGemini({
+      target: "boss",
+      problem: "late",
+      tone: "funny",
+      customText: "আপুর মোবাইল নষ্ট করে ফেলেছি",
+    });
+
+    expect(result.target).toBe("parents");
+    expect(result.message).toMatch(/আপডেট|চার্জ|ব্যাটারি|বিড়াল|স্ক্রিন|ডিসপ্লে|ডিভাইস|মোবাইল|গ্যাজেট/);
+    expect(result.message).not.toMatch(/ডেলিভারি|রিকশা|ট্রাফিক জ্যাম/);
+  });
+
+  it("silently falls back to local excuse dictionary on 429 rate limit", async () => {
+    vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.test_key");
+
+    const generateContentStream = vi.fn(async () => {
+      throw makeApiError(429, "RESOURCE_EXHAUSTED");
+    });
+
+    const result = await generateExcuseWithGemini(
+      { target: "partner", problem: "overslept", tone: "emotional" },
+      { generateContentStream },
+    );
+
+    expect(generateContentStream).toHaveBeenCalledTimes(1);
+    expect(result.target).toBe("partner");
+    expect(result.tone).toBe("emotional");
+    expect(result.message.length).toBeGreaterThan(10);
+  });
+
+  it("silently falls back to keyword-matched local excuse when Gemini times out", async () => {
+    vi.stubEnv("VITE_GEMINI_API_KEY", "AQ.test_key");
+
+    const generateContentStream = vi.fn(
       () =>
         new Promise<AsyncIterable<{ text?: string | undefined }>>(() => {
           // Never resolves to simulate stalled connection
         }),
     );
 
-    const customInput = "রাহাতকে টাকা দিতে দেরি হচ্ছে";
+    const customInput = "অ্যাসাইনমেন্ট জমা দিতে পারিনি";
     const result = await generateExcuseWithGemini(
       { target: "boss", problem: "late", tone: "real", customText: customInput },
-      { fetchStream, timeoutMs: 30 },
+      { generateContentStream, timeoutMs: 30 },
     );
 
-    expect(result.message).toContain("রাহাত");
+    expect(result.target).toBe("teacher");
     expect(result.message).not.toContain(customInput);
-    expect(result.message).not.toMatch(/জ্যাম|রিকশা|ডেলিভারি/);
+    expect(result.message).not.toContain("এর কারণেই একটু আটকে গেছি");
   });
 });
