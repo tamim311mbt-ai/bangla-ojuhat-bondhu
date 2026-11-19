@@ -1,6 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { ChevronDown, Loader2, Moon, Sparkles, Sun, Wand2, X } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronDown,
+  Loader2,
+  Moon,
+  RotateCcw,
+  Sparkles,
+  Sun,
+  Wand2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ExcuseLoadingCard } from "@/components/ojuhat/ExcuseLoadingCard";
@@ -12,7 +22,11 @@ import { StatsCards } from "@/components/ojuhat/StatsCards";
 import { WelcomeModal } from "@/components/ojuhat/WelcomeModal";
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 import { fireExcuseConfetti } from "@/lib/confetti";
-import { generateExcuseWithGemini } from "@/lib/gemini-excuse";
+import {
+  GEMINI_BUSY_ERROR_MESSAGE,
+  GeminiUnavailableError,
+  generateExcuseWithGemini,
+} from "@/lib/gemini-excuse";
 import mascot from "@/assets/mascot.png";
 import {
   PROBLEMS,
@@ -20,7 +34,6 @@ import {
   TONES,
   excuseOfTheDay,
   formatCustomExcuseBadge,
-  generateSmartLocalExcuse,
   type Excuse,
   type GeneratedExcuse,
   type Problem,
@@ -117,6 +130,8 @@ function Index() {
   const [resultKey, setResultKey] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [daily, setDaily] = useState<Excuse | null>(null);
   const [welcomeOpen, setWelcomeOpen] = useState(true);
   const [isDark, setIsDark] = useState(false);
@@ -158,6 +173,8 @@ function Index() {
 
     setIsGenerating(true);
     setIsStreaming(false);
+    setRetryAttempt(0);
+    setApiError(null);
 
     if (scroll && typeof window !== "undefined" && window.innerWidth < 1024) {
       setTimeout(
@@ -180,6 +197,11 @@ function Index() {
           previousMessage,
         },
         {
+          onRetry: (attempt) => {
+            hasReceivedFirstChunk = false;
+            setIsStreaming(false);
+            setRetryAttempt(attempt);
+          },
           onChunk: (partialMessage) => {
             if (!hasReceivedFirstChunk) {
               hasReceivedFirstChunk = true;
@@ -203,6 +225,7 @@ function Index() {
         setResultKey((prev) => prev + 1);
       }
       setIsStreaming(false);
+      setApiError(null);
       setResult(generated);
 
       if (scroll) {
@@ -210,24 +233,13 @@ function Index() {
         setExcusesCount((prev) => prev + 1);
         void recordExcuseGenerated().then(setExcusesCount);
       }
-    } catch {
-      const fallback = generateSmartLocalExcuse({
-        target,
-        problem,
-        tone,
-        customText: customSituation,
-        previousMessage,
-      });
-      if (!hasReceivedFirstChunk) {
-        setResultKey((prev) => prev + 1);
-      }
+    } catch (err) {
+      const busyMessage =
+        err instanceof GeminiUnavailableError ? err.message : GEMINI_BUSY_ERROR_MESSAGE;
       setIsStreaming(false);
-      setResult(fallback);
-      if (scroll) {
-        fireExcuseConfetti();
-        setExcusesCount((prev) => prev + 1);
-        void recordExcuseGenerated().then(setExcusesCount);
-      }
+      setResult(null);
+      setApiError(busyMessage);
+      toast.error(busyMessage);
     } finally {
       setIsStreaming(false);
       setIsGenerating(false);
@@ -461,10 +473,10 @@ function Index() {
                 className="h-14 w-full text-base sm:h-16 sm:text-lg"
               >
                 {isGenerating ? (
-                  <>
-                    <Loader2 className="size-5 animate-spin" />
-                    <span>AI অজুহাত তৈরি করছে...</span>
-                  </>
+                  <span className="inline-flex animate-pulse items-center justify-center gap-2.5">
+                    <Loader2 className="size-5 shrink-0 animate-spin" />
+                    <span>এআই আপনার জন্য সেরা অজুহাত ভাবছে...</span>
+                  </span>
                 ) : (
                   "সেরা অজুহাত তৈরি করুন ✨"
                 )}
@@ -476,7 +488,32 @@ function Index() {
           <div className="mt-6 space-y-6 lg:sticky lg:top-6 lg:col-span-5 lg:mt-0">
             <div ref={resultRef} className="scroll-mt-4">
               {isGenerating && !isStreaming ? (
-                <ExcuseLoadingCard />
+                <ExcuseLoadingCard retryAttempt={retryAttempt} />
+              ) : apiError ? (
+                <section
+                  role="alert"
+                  className="luxury-glass animate-pop flex flex-col items-center justify-center rounded-3xl border border-amber-300/60 p-6 text-center sm:p-7 dark:border-amber-400/25"
+                >
+                  <div className="flex size-14 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-300">
+                    <AlertCircle className="size-7" aria-hidden="true" />
+                  </div>
+                  <h2 className="mt-4 font-display text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                    সাময়িক ব্যস্ততা
+                  </h2>
+                  <p className="mt-2 text-sm leading-[1.8] text-muted-foreground sm:text-[15px]">
+                    {apiError}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="cta"
+                    size="lg"
+                    onClick={() => void generate(false)}
+                    className="mt-5 gap-2"
+                  >
+                    <RotateCcw className="size-4" aria-hidden="true" />
+                    <span>আবার চেষ্টা করুন</span>
+                  </Button>
+                </section>
               ) : result ? (
                 <ResultCard
                   result={result}

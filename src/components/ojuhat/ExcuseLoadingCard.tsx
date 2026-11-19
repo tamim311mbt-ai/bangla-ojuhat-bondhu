@@ -2,13 +2,17 @@ import { useEffect, useState } from "react";
 import { Sparkles, Wand2 } from "lucide-react";
 
 const LOADING_MESSAGES = [
-  "চিপায় পড়া পরিস্থিতি বিশ্লেষণ করা হচ্ছে... 🧠",
-  "একদম খাঁটি ঢাকাইয়া অজুহাত রান্না হচ্ছে... 🍳",
-  "বিশ্বাসযোগ্যতার লেভেল মাপা হচ্ছে... 🎯",
-  "মজার পাঞ্চলাইন আর ফ্লেভার মেশানো হচ্ছে... ✨",
+  "এআই আপনার জন্য সেরা অজুহাত ভাবছে... ✨",
+  "পরিস্থিতির আসল সুর ও প্রেক্ষাপট সাজানো হচ্ছে... 🧠",
+  "বিশ্বাসযোগ্যতা ও মজার পাঞ্চলাইন মেলানো হচ্ছে... 🎯",
+  "একদম ঝরঝরে বাংলাদেশি বাংলায় লেখা হচ্ছে... ✍️",
 ];
 
-export function ExcuseLoadingCard() {
+interface ExcuseLoadingCardProps {
+  retryAttempt?: number;
+}
+
+export function ExcuseLoadingCard({ retryAttempt = 0 }: ExcuseLoadingCardProps) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
@@ -27,7 +31,7 @@ export function ExcuseLoadingCard() {
       <div className="flex items-center justify-between bg-gradient-cta px-4 py-3 text-white sm:px-5">
         <p className="flex items-center gap-2 text-sm font-semibold">
           <Sparkles className="size-4 animate-spin" aria-hidden="true" />
-          <span>অজুহাত ফ্যাক্টরি AI তৈরি করছে...</span>
+          <span>এআই আপনার জন্য সেরা অজুহাত ভাবছে...</span>
         </p>
       </div>
 
@@ -37,7 +41,9 @@ export function ExcuseLoadingCard() {
             <Wand2 className="size-7 animate-bounce" aria-hidden="true" />
           </div>
           <p className="mt-3 text-sm font-bold text-foreground sm:text-base">
-            {LOADING_MESSAGES[step]}
+            {retryAttempt > 0
+              ? "সংযোগে একটু দেরি হচ্ছে, এআই আবার চেষ্টা করছে..."
+              : LOADING_MESSAGES[step]}
           </p>
           <div className="mt-2.5 flex items-center gap-1.5" aria-hidden="true">
             <span className="size-2 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />

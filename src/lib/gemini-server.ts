@@ -14,12 +14,13 @@ export const GEMINI_MAX_OUTPUT_TOKENS = 250;
 export const GEMINI_THINKING_BUDGET = 0;
 
 const CUSTOM_SYSTEM_INSTRUCTION = `You are a witty Bangladeshi Bengali excuse generator ("অজুহাত ফ্যাক্টরি").
-Read the user's exact Bengali situation carefully.
-Rules:
-1. Write 100% natural Bangladeshi Bengali (স্বাভাবিক বাংলাদেশি মুখের বাংলা ভাষা). Avoid stiff textbook phrasing.
-2. If a person's name or relationship is mentioned in the user's situation (e.g., রাহাত, সাকিব, আপু, আম্মু, বস, স্যার), include that exact name naturally in the response.
-3. Generate a clever, realistic, and natural 2-3 sentence Bengali excuse or message tailored 100% to THIS exact situation so the user can escape blame or handle it smoothly.
-4. Do NOT talk about traffic, delivery men, or being late unless the user specifically asked about being late or traffic. Never give a generic unrelated excuse.
+Read the user's exact Bengali situation or short keyword carefully.
+
+CRITICAL STRICT RULES:
+1. 100% IGNORE ALL UPPER DROPDOWN PRESETS: Never talk about traffic, delivery men, boss, or being late unless the user specifically asked about them.
+2. UNDERSTAND SHORT OR INCOMPLETE WORDS: Even if the user types only 1 or 2 short or incomplete Bengali words (such as "বাবার", "পরীক্ষা", "মোবাইল", "টাকা"), infer the most relatable Bangladeshi real-life scenario centered on that word and write a complete, clever 2-3 sentence excuse.
+3. Write 100% natural Bangladeshi Bengali (স্বাভাবিক বাংলাদেশি মুখের বাংলা ভাষা). Avoid stiff textbook phrasing.
+4. If a person's name or relationship is mentioned in the user's situation (e.g., রাহাত, সাকিব, আপু, আম্মু, বাবার, বস, স্যার), include that exact person/relationship naturally in the response.
 5. Never awkwardly repeat or quote the user's prompt question back—write the actual ready-to-send message directly from the sender's perspective.
 6. Match the requested tone carefully:
    - "একদম বিশ্বাসযোগ্য": Realistic, polite, convincing with specific relatable details (score 74–96).
@@ -77,10 +78,13 @@ export function buildServerPrompt(input: ServerGeminiExcuseInput): string {
   const lines: string[] = [];
 
   if (custom) {
-    lines.push(`User's exact custom situation in Bengali: "${custom}"`);
+    lines.push(
+      "কড়া নির্দেশনা: ওপরের কোনো ড্রপডাউন অপশন সম্পূর্ণ উপেক্ষা করো। শুধুমাত্র নিচের ব্যবহারকারীর লেখা পরিস্থিতি বা ছোট শব্দটিকে কেন্দ্র করেই ১০০% নতুন ও পূর্ণাঙ্গ একটি অজুহাত তৈরি করো।",
+    );
+    lines.push(`User's exact custom situation/keyword in Bengali: "${custom}"`);
     lines.push(`Requested tone: ${toneLabel}${toneHint ? ` (${toneHint})` : ""}`);
     lines.push(
-      "Instruction: Read the user's exact Bengali situation carefully. If a person's name is mentioned, include that exact name naturally in the response. Write a witty, realistic, 2-3 sentence Bangladeshi Bengali excuse or message tailored 100% to THIS exact situation. Never give a generic unrelated excuse.",
+      "Instruction: Even if the custom text is just 1 or 2 short/incomplete words (e.g., 'বাবার', 'পরীক্ষা'), infer the most relatable Bangladeshi context around it and write a complete, witty, realistic 2-3 sentence Bengali excuse centered 100% on it.",
     );
   } else {
     const targetMeta = TARGETS.find((t) => t.value === input.target);
@@ -180,8 +184,18 @@ export async function handleGeminiExcuseRequest(request: Request): Promise<Respo
     });
   } catch (error) {
     console.error("Gemini API error:", error);
+    const errMessage = error instanceof Error ? error.message : "";
+    const rawStatus = (error as { status?: unknown })?.status;
+    const status =
+      typeof rawStatus === "number"
+        ? rawStatus
+        : errMessage.includes("429") || errMessage.includes("RESOURCE_EXHAUSTED")
+          ? 429
+          : errMessage.includes("503") || errMessage.includes("UNAVAILABLE")
+            ? 503
+            : 502;
     return new Response(JSON.stringify({ error: "Failed to generate excuse" }), {
-      status: 502,
+      status,
       headers: { "content-type": "application/json" },
     });
   }

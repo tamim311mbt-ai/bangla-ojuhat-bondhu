@@ -88,7 +88,16 @@ async function handleApiExcuse(request: Request): Promise<Response> {
     return Response.json({ text });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Gemini request failed";
-    return Response.json({ error: message }, { status: 502 });
+    const rawStatus = (err as { status?: unknown })?.status;
+    const status =
+      typeof rawStatus === "number"
+        ? rawStatus
+        : message.includes("429") || message.includes("RESOURCE_EXHAUSTED")
+          ? 429
+          : message.includes("503") || message.includes("UNAVAILABLE")
+            ? 503
+            : 502;
+    return Response.json({ error: message }, { status });
   }
 }
 
