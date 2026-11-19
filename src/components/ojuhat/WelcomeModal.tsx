@@ -22,67 +22,72 @@ export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out" />
         <DialogPrimitive.Content
           aria-describedby="welcome-modal-desc"
-          className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border border-slate-200/80 bg-white/92 text-card-foreground shadow-card backdrop-blur-2xl outline-none data-[state=open]:animate-modal-in data-[state=closed]:animate-modal-out dark:border-white/12 dark:bg-[#0f172a]/92 sm:w-[calc(100%-2rem)]"
+          className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border border-teal-500/20 bg-gradient-to-br from-[#F0FDF9]/95 via-[#F2F9FF]/95 to-white/95 text-card-foreground shadow-[0_28px_64px_-16px_rgba(15,76,92,0.22),0_4px_16px_-4px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl outline-none data-[state=open]:animate-modal-in data-[state=closed]:animate-modal-out dark:border-teal-400/20 dark:from-[#0B1622]/95 dark:via-[#0F172A]/95 dark:to-[#111C2D]/95 dark:shadow-[0_28px_64px_-16px_rgba(0,0,0,0.82),inset_0_1px_0_rgba(255,255,255,0.08)] sm:w-[calc(100%-2rem)]"
         >
-          {/* Warm theme top accent bar */}
-          <div className="sticky top-0 z-10 h-2.5 w-full bg-gradient-cta" />
+          {/* Dark Teal to Vibrant Coral-Orange top accent bar */}
+          <div className="sticky top-0 z-10 h-2 w-full bg-gradient-to-r from-[#0F4C5C] via-[#0D9488] to-[#F97316]" />
 
           {/* Top-right close (X) button */}
           <DialogPrimitive.Close
             aria-label="পপআপ বন্ধ করুন"
-            className="absolute right-3 top-4 z-20 flex size-10 cursor-pointer items-center justify-center rounded-full bg-muted/90 text-muted-foreground transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 hover:bg-secondary hover:text-foreground active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:right-3.5 sm:top-5"
+            className="absolute right-3 top-4 z-20 flex size-10 cursor-pointer items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-muted-foreground shadow-xs backdrop-blur-md transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 hover:border-teal-500/35 hover:bg-white hover:text-foreground active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/12 dark:bg-slate-800/80 dark:hover:bg-slate-800 sm:right-3.5 sm:top-5"
           >
             <X className="size-5" />
           </DialogPrimitive.Close>
 
           <div className="flex flex-col items-center px-5 pb-5 pt-5 text-center sm:px-8 sm:pb-7 sm:pt-6">
-            <DialogPrimitive.Title className="pr-6 font-display text-3xl font-bold leading-tight text-primary sm:pr-0 sm:text-[38px]">
-              অভিনন্দন! 🎉
+            <DialogPrimitive.Title className="pr-6 font-display text-3xl font-bold leading-tight tracking-tight sm:pr-0 sm:text-[38px]">
+              <span className="bg-gradient-to-r from-[#0F4C5C] via-[#0D9488] to-[#F97316] bg-clip-text text-transparent dark:from-[#2DD4BF] dark:via-[#38BDF8] dark:to-[#FB923C]">
+                অভিনন্দন!
+              </span>{" "}
+              <span aria-hidden="true">🎉</span>
             </DialogPrimitive.Title>
 
             <p
               id="welcome-modal-desc"
-              className="mt-1 text-xs font-medium text-muted-foreground sm:text-sm"
+              className="mt-1.5 text-xs font-medium leading-relaxed text-muted-foreground sm:text-sm"
             >
               অজুহাত ফ্যাক্টরিতে আপনাকে স্বাগতম
             </p>
 
             {/* Main Center Brand Logo */}
             <div className="mt-3 flex justify-center sm:mt-4">
-              <div className="rounded-3xl transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 dark:bg-white/92 dark:p-2 dark:shadow-sm dark:ring-1 dark:ring-white/20">
+              <div className="rounded-3xl transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 dark:bg-white/92 dark:p-2 dark:shadow-sm dark:ring-1 dark:ring-teal-400/20">
                 <img
                   src={LOGO_IMAGE_SRC}
                   alt="অজুহাত ফ্যাক্টরি লোগো"
                   width={500}
                   height={500}
-                  className="h-auto w-[130px] object-contain drop-shadow-[0_10px_18px_rgba(15,23,42,0.14)] sm:w-[146px]"
+                  className="h-auto w-[130px] object-contain drop-shadow-[0_10px_18px_rgba(15,76,92,0.16)] sm:w-[146px]"
                 />
               </div>
             </div>
 
-            {/* Compact Horizontal Pill Founder Badge */}
-            <div className="mt-3.5 inline-flex max-w-full items-center gap-3 rounded-full border border-slate-200/90 bg-[#F8FAFC] py-1.5 pl-1.5 pr-4 shadow-xs sm:mt-4 dark:border-border dark:bg-secondary/75">
-              <div className="size-11 shrink-0 overflow-hidden rounded-full border-2 border-primary/25 bg-white shadow-xs">
-                {imageError ? (
-                  <div className="flex size-full items-center justify-center bg-secondary text-sm font-bold text-primary">
-                    T
-                  </div>
-                ) : (
-                  <img
-                    src={PROFILE_IMAGE_SRC}
-                    alt="Motasim Billah Tamim"
-                    width={88}
-                    height={88}
-                    onError={() => setImageError(true)}
-                    className="size-full object-cover object-top"
-                  />
-                )}
+            {/* Frosted Glass Founder Badge with Glowing Teal-Coral Avatar Ring */}
+            <div className="mt-3.5 inline-flex max-w-full items-center gap-3.5 rounded-2xl border border-teal-500/20 bg-white/75 py-2 pl-2.5 pr-4 shadow-[0_8px_24px_-8px_rgba(15,76,92,0.14)] backdrop-blur-md transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-0.5 hover:border-teal-500/35 sm:mt-4 dark:border-white/12 dark:bg-slate-900/65 dark:shadow-[0_10px_28px_-10px_rgba(0,0,0,0.6)]">
+              <div className="size-13 shrink-0 rounded-full bg-gradient-to-tr from-[#0F4C5C] via-[#0D9488] to-[#F97316] p-[2.5px] shadow-[0_0_16px_-2px_rgba(13,148,136,0.45),0_0_12px_-3px_rgba(249,115,22,0.4)] sm:size-14">
+                <div className="size-full overflow-hidden rounded-full bg-white ring-2 ring-white/90 dark:bg-slate-900 dark:ring-slate-900">
+                  {imageError ? (
+                    <div className="flex size-full items-center justify-center bg-secondary text-sm font-bold text-primary">
+                      T
+                    </div>
+                  ) : (
+                    <img
+                      src={PROFILE_IMAGE_SRC}
+                      alt="Motasim Billah Tamim"
+                      width={112}
+                      height={112}
+                      onError={() => setImageError(true)}
+                      className="size-full object-cover object-top"
+                    />
+                  )}
+                </div>
               </div>
               <div className="min-w-0 text-left">
-                <h2 className="truncate font-sans text-sm font-bold leading-tight text-slate-900 sm:text-[15px] dark:text-foreground">
+                <h2 className="truncate font-display text-sm font-bold leading-tight text-slate-900 sm:text-[15.5px] dark:text-foreground">
                   Motasim Billah Tamim
                 </h2>
-                <p className="mt-0.5 truncate text-xs font-semibold leading-tight text-primary">
+                <p className="mt-0.5 truncate text-xs font-semibold leading-tight text-[#0F4C5C] dark:text-teal-300">
                   CEO • অজুহাত ফ্যাক্টরি
                 </p>
               </div>
@@ -94,7 +99,7 @@ export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
                 href={FACEBOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[#1877F2] px-4 text-sm font-bold text-white shadow-sm transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-[1.025] hover:bg-[#166FE5] hover:shadow-md active:scale-[0.95] active:duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1877F2] focus-visible:ring-offset-2 sm:h-12 sm:gap-2.5 sm:px-5 sm:text-[15px]"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-gradient-to-r from-[#0F4C5C] via-[#0E5A75] to-[#0369A1] px-4 text-sm font-bold text-white shadow-[0_10px_24px_-8px_rgba(15,76,92,0.55)] transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-0.5 hover:scale-[1.02] hover:brightness-110 hover:shadow-[0_14px_28px_-8px_rgba(15,76,92,0.65)] active:translate-y-0 active:scale-[0.95] active:duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0D9488] focus-visible:ring-offset-2 sm:h-12 sm:gap-2.5 sm:px-5 sm:text-[15px]"
               >
                 <svg
                   aria-hidden="true"
