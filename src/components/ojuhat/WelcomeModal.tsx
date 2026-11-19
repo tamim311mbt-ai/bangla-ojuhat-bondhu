@@ -19,10 +19,10 @@ export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out" />
         <DialogPrimitive.Content
           aria-describedby="welcome-modal-desc"
-          className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border border-border bg-card text-card-foreground shadow-card outline-none data-[state=open]:animate-modal-in data-[state=closed]:animate-modal-out sm:w-[calc(100%-2rem)]"
+          className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border border-slate-200/80 bg-white/92 text-card-foreground shadow-card backdrop-blur-2xl outline-none data-[state=open]:animate-modal-in data-[state=closed]:animate-modal-out dark:border-white/12 dark:bg-[#0f172a]/92 sm:w-[calc(100%-2rem)]"
         >
           {/* Warm theme top accent bar */}
           <div className="sticky top-0 z-10 h-2.5 w-full bg-gradient-cta" />
@@ -49,7 +49,7 @@ export function WelcomeModal({ open, onOpenChange }: WelcomeModalProps) {
 
             {/* Main Center Brand Logo */}
             <div className="mt-3 flex justify-center sm:mt-4">
-              <div className="rounded-3xl transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 dark:bg-[#FFF9F0]/95 dark:p-2 dark:shadow-sm dark:ring-1 dark:ring-white/15">
+              <div className="rounded-3xl transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 dark:bg-white/92 dark:p-2 dark:shadow-sm dark:ring-1 dark:ring-white/20">
                 <img
                   src={LOGO_IMAGE_SRC}
                   alt="অজুহাত ফ্যাক্টরি লোগো"

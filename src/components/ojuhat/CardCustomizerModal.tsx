@@ -100,7 +100,7 @@ export function CardCustomizerModal({ open, onOpenChange, result }: CardCustomiz
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-xl overflow-y-auto rounded-3xl border-border/80 bg-card p-4 sm:p-6">
+      <DialogContent className="max-h-[92vh] max-w-xl overflow-y-auto rounded-3xl border border-slate-200/80 bg-white/95 p-4 backdrop-blur-2xl dark:border-white/12 dark:bg-[#0f172a]/95 sm:p-6">
         <DialogHeader className="text-left">
           <DialogTitle className="flex items-center gap-2 font-display text-lg font-bold sm:text-xl">
             <Palette className="size-5 text-primary" aria-hidden="true" />
@@ -140,9 +140,10 @@ export function CardCustomizerModal({ open, onOpenChange, result }: CardCustomiz
           <p className="text-xs font-semibold text-muted-foreground sm:text-sm">
             কার্ডের থিম বেছে নিন
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
+          <div className="mx-auto grid w-fit grid-cols-6 justify-items-center gap-2.5 sm:mx-0 sm:gap-3">
             {CARD_THEMES.map((theme) => {
               const active = theme.id === themeId;
+              const isLightSwatch = theme.id === "cream" || theme.id === "soft-pastel";
               return (
                 <button
                   key={theme.id}
@@ -164,7 +165,7 @@ export function CardCustomizerModal({ open, onOpenChange, result }: CardCustomiz
                   {active && (
                     <Check
                       className={`size-4 drop-shadow-sm ${
-                        theme.id === "cream" ? "text-amber-950" : "text-white"
+                        isLightSwatch ? "text-amber-950" : "text-white"
                       }`}
                       strokeWidth={3}
                     />
@@ -223,7 +224,7 @@ export function CardCustomizerModal({ open, onOpenChange, result }: CardCustomiz
             size="action"
             onClick={() => void handleDownloadPng()}
             disabled={isDownloading}
-            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-cta text-sm font-bold text-primary-foreground shadow-sm hover:brightness-105"
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-white/20 bg-gradient-cta text-sm font-bold text-white shadow-sm hover:brightness-105"
           >
             {isDownloading ? (
               <>

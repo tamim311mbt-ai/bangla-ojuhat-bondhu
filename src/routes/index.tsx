@@ -89,7 +89,7 @@ export const Route = createFileRoute("/")({
 });
 
 const selectClass =
-  "h-13 sm:h-14 w-full cursor-pointer appearance-none rounded-2xl border-2 border-border bg-card pl-4 pr-11 text-sm sm:text-base font-medium text-foreground outline-none transition-all duration-200 ease-out hover:border-primary/50 hover:shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_10%,transparent)] focus:border-primary focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--primary)_22%,transparent),0_10px_24px_-10px_color-mix(in_oklab,var(--primary)_38%,transparent)]";
+  "h-13 sm:h-14 w-full cursor-pointer appearance-none rounded-2xl border border-slate-200/90 bg-white/80 pl-4 pr-11 text-sm sm:text-base font-medium text-foreground shadow-xs backdrop-blur-md outline-none transition-all duration-200 ease-out hover:border-primary/45 hover:bg-white hover:shadow-[0_0_0_3px_rgba(249,115,22,0.08)] focus:border-primary focus:bg-white focus:shadow-[0_0_0_4px_rgba(249,115,22,0.16),0_10px_24px_-10px_rgba(249,115,22,0.28)] dark:border-white/12 dark:bg-slate-900/75 dark:hover:border-primary/50 dark:hover:bg-slate-900/90 dark:focus:bg-slate-900";
 
 function enterDelay(ms: number): CSSProperties {
   return { "--enter-delay": `${ms}ms` } as CSSProperties;
@@ -258,15 +258,15 @@ function Index() {
       <WelcomeModal open={welcomeOpen} onOpenChange={setWelcomeOpen} />
 
       <header
-        className="animate-enter flex items-center justify-between gap-2.5 border-b border-border/60 pb-3.5 sm:gap-4 sm:pb-4"
+        className="navbar-glass animate-enter sticky top-2.5 z-40 flex items-center justify-between gap-2.5 rounded-2xl px-3.5 py-2 transition-all duration-200 sm:top-3.5 sm:gap-4 sm:rounded-3xl sm:px-5 sm:py-2.5"
         style={enterDelay(0)}
       >
-        <div className="flex min-w-0 items-center gap-2.5 sm:gap-4">
-          <a
-            href="/"
-            aria-label="অজুহাত ফ্যাক্টরি"
-            className="shrink-0 rounded-2xl transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-[#FFF9F0]/95 dark:p-1.5 dark:shadow-sm dark:ring-1 dark:ring-white/15"
-          >
+        <a
+          href="/"
+          aria-label="অজুহাত ফ্যাক্টরি"
+          className="group flex min-w-0 shrink-0 items-center gap-2 rounded-xl py-0.5 transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:gap-3"
+        >
+          <div className="shrink-0 rounded-xl transition-transform duration-200 group-hover:scale-105 group-hover:-rotate-3 dark:bg-white/92 dark:p-1 dark:shadow-xs dark:ring-1 dark:ring-white/20">
             <img
               src="/assets/aistudio/1000012711-removebg-preview_cac0c2f6.png"
               alt="অজুহাত ফ্যাক্টরি লোগো"
@@ -274,19 +274,16 @@ function Index() {
               height={500}
               loading="eager"
               decoding="async"
-              className="h-14 w-auto object-contain sm:h-[4.75rem] lg:h-[5.5rem]"
+              className="h-9 w-auto object-contain sm:h-11"
             />
-          </a>
-          <div className="min-w-0">
-            <h1 className="sr-only">অজুহাত ফ্যাক্টরি</h1>
-            <p className="text-xs font-semibold leading-snug text-muted-foreground sm:text-sm lg:text-[15px]">
-              এখানে যত্ন সহকারে নিখুঁত অজুহাত তৈরি করা হয় 🏭
-            </p>
           </div>
-        </div>
+          <h1 className="truncate font-display text-lg font-bold tracking-tight text-foreground sm:text-xl">
+            অজুহাত ফ্যাক্টরি
+          </h1>
+        </a>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          <span className="hidden rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground sm:inline-flex">
+          <span className="hidden items-center whitespace-nowrap rounded-full border border-sky-200/80 bg-sky-50/85 px-2.5 py-1 text-[11px] font-bold text-sky-700 backdrop-blur-md min-[380px]:inline-flex sm:px-3.5 sm:py-1.5 sm:text-xs dark:border-sky-400/20 dark:bg-sky-500/12 dark:text-sky-300">
             ১,০০০+ অজুহাত
           </span>
           <button
@@ -294,12 +291,12 @@ function Index() {
             onClick={toggleTheme}
             aria-label={isDark ? "লাইট মোড চালু করুন" : "ডার্ক মোড চালু করুন"}
             title={isDark ? "লাইট মোড" : "ডার্ক মোড"}
-            className="flex size-11 cursor-pointer items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 hover:border-primary/50 hover:bg-secondary active:scale-90 active:duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="luxury-glass-subtle flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-xl text-foreground shadow-xs transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-0.5 hover:scale-105 hover:border-primary/45 active:translate-y-0 active:scale-90 active:duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:size-10.5 sm:rounded-2xl"
           >
             {isDark ? (
-              <Sun className="size-5 text-sunny transition-transform duration-300" />
+              <Sun className="size-4.5 text-amber-400 transition-transform duration-300 sm:size-5" />
             ) : (
-              <Moon className="size-5 text-primary transition-transform duration-300" />
+              <Moon className="size-4.5 text-primary transition-transform duration-300 sm:size-5" />
             )}
           </button>
         </div>
@@ -309,14 +306,17 @@ function Index() {
         {/* Left column: Hero intro + Excuse generator form */}
         <div className="lg:col-span-7">
           <section
-            className="animate-enter relative flex items-center gap-3 rounded-3xl bg-card/65 p-4 shadow-sm backdrop-blur-sm sm:gap-4 sm:p-5 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none"
+            className="luxury-glass animate-enter relative flex items-center gap-3 rounded-3xl p-4 sm:gap-4 sm:p-5 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none"
             style={enterDelay(70)}
           >
             <div className="min-w-0 flex-1">
-              <p className="font-display text-2xl font-bold leading-snug sm:text-[28px] lg:text-[32px]">
-                ঝামেলায় পড়েছেন? <span className="text-teal">চিন্তা নেই!</span>
+              <p className="mb-1 text-xs font-semibold tracking-wide text-primary sm:text-[13px]">
+                এখানে যত্ন সহকারে নিখুঁত অজুহাত তৈরি করা হয় 🏭
               </p>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
+              <h2 className="font-display text-2xl font-bold leading-snug tracking-tight text-balance sm:text-[30px] lg:text-[34px]">
+                ঝামেলায় পড়েছেন? <span className="text-teal">চিন্তা নেই!</span>
+              </h2>
+              <p className="mt-1.5 text-sm leading-[1.75] text-muted-foreground sm:text-[15px]">
                 তিনটি জিনিস বেছে নিন, বাকিটা আমাদের মাথা খাটানোর দায়িত্ব।
               </p>
             </div>
@@ -332,7 +332,7 @@ function Index() {
           </section>
 
           <form
-            className="animate-enter mt-4 space-y-4 rounded-3xl border border-border/60 bg-card p-4 shadow-card sm:space-y-5 sm:p-6 lg:mt-5"
+            className="luxury-glass animate-enter mt-4 space-y-4 rounded-3xl p-4 transition-shadow duration-200 hover:shadow-[0_24px_50px_-20px_rgba(15,23,42,0.18)] sm:space-y-5 sm:p-6 lg:mt-5"
             style={enterDelay(140)}
             onSubmit={(e) => {
               e.preventDefault();
@@ -385,10 +385,10 @@ function Index() {
                       role="radio"
                       aria-checked={active}
                       onClick={() => setTone(t.value)}
-                      className={`group flex min-h-[88px] cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 px-1 py-2.5 text-center transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.94] active:duration-100 sm:px-2 sm:py-3 ${
+                      className={`group flex min-h-[88px] cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border px-1 py-2.5 text-center backdrop-blur-md transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:translate-y-0 active:scale-[0.93] active:duration-100 sm:px-2 sm:py-3 ${
                         active
-                          ? "scale-[1.03] border-primary bg-primary/12 text-foreground shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_18%,transparent),0_10px_24px_-8px_color-mix(in_oklab,var(--primary)_40%,transparent)]"
-                          : "border-border bg-card text-muted-foreground hover:-translate-y-0.5 hover:border-primary/55 hover:shadow-[0_6px_18px_-6px_color-mix(in_oklab,var(--primary)_25%,transparent)]"
+                          ? "scale-[1.02] border-primary/85 bg-gradient-to-b from-orange-500/12 to-amber-500/8 text-foreground shadow-[0_0_0_3px_rgba(249,115,22,0.14),0_10px_24px_-10px_rgba(249,115,22,0.3)] hover:-translate-y-0.5 dark:from-orange-500/18 dark:to-amber-500/10"
+                          : "border-slate-200/90 bg-white/75 text-muted-foreground shadow-xs hover:-translate-y-1 hover:scale-[1.015] hover:border-primary/45 hover:bg-white hover:text-foreground hover:shadow-[0_10px_24px_-8px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-slate-900/55 dark:hover:border-primary/45 dark:hover:bg-slate-900/80"
                       }`}
                     >
                       <span
@@ -410,7 +410,7 @@ function Index() {
               </div>
             </fieldset>
 
-            <div className="border-t border-border/60 pt-4">
+            <div className="border-t border-slate-200/75 pt-4 dark:border-white/10">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <label
                   htmlFor="custom-situation-input"
@@ -435,9 +435,9 @@ function Index() {
                 rows={3}
                 maxLength={240}
                 placeholder="অথবা আপনার নিজের পরিস্থিতি লিখুন... (যেমন: বসের কাছে দেরির অজুহাত বা বন্ধুকে পচানো)"
-                className="w-full resize-none rounded-2xl border-2 border-border bg-card p-3.5 text-sm leading-relaxed text-foreground outline-none transition-all duration-200 ease-out placeholder:text-muted-foreground/75 hover:border-primary/50 focus:border-primary focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--primary)_20%,transparent),0_10px_24px_-10px_color-mix(in_oklab,var(--primary)_35%,transparent)] sm:p-4 sm:text-base"
+                className="w-full resize-none rounded-2xl border border-slate-200/90 bg-white/80 p-3.5 text-sm leading-[1.75] text-foreground shadow-xs backdrop-blur-md outline-none transition-all duration-200 ease-out placeholder:text-muted-foreground/75 hover:border-primary/45 hover:bg-white focus:border-primary focus:bg-white focus:shadow-[0_0_0_4px_rgba(249,115,22,0.16),0_10px_24px_-10px_rgba(249,115,22,0.25)] dark:border-white/12 dark:bg-slate-900/70 dark:hover:border-primary/50 dark:hover:bg-slate-900/85 dark:focus:bg-slate-900 sm:p-4 sm:text-base"
               />
-              <p className="mt-1.5 text-xs text-muted-foreground">
+              <p className="mt-2 text-xs leading-[1.7] text-muted-foreground">
                 {customSituation.trim()
                   ? "আপনার লেখা পরিস্থিতিকেই সর্বোচ্চ অগ্রাধিকার দিয়ে সরাসরি উত্তর তৈরি হবে ✨"
                   : "খালি রাখলে উপরের সিলেক্ট করা ক্যাটাগরি অনুযায়ী অজুহাত তৈরি হবে।"}
@@ -480,16 +480,16 @@ function Index() {
               />
             ) : (
               <div
-                className="animate-enter hidden flex-col items-center justify-center rounded-3xl border-2 border-dashed border-border bg-card/75 p-7 text-center shadow-sm lg:flex"
+                className="luxury-glass luxury-card-hover animate-enter hidden flex-col items-center justify-center rounded-3xl p-7 text-center lg:flex"
                 style={enterDelay(170)}
               >
-                <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <div className="flex size-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
                   <Wand2 className="size-7" />
                 </div>
-                <h2 className="mt-4 font-display text-2xl font-bold text-foreground">
+                <h2 className="mt-4 font-display text-2xl font-bold tracking-tight text-foreground">
                   আপনার অজুহাত এখানে তৈরি হবে
                 </h2>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-2 text-sm leading-[1.8] text-muted-foreground">
                   বাম দিকের ফর্ম থেকে অপশন বেছে নিন অথবা নিজের পরিস্থিতি লিখে বাটনে ক্লিক করুন—মুহূর্তেই AI
                   দিয়ে নতুন অজুহাত ও শেয়ারযোগ্য কার্ড রেডি হয়ে যাবে!
                 </p>
@@ -499,17 +499,17 @@ function Index() {
 
           {daily && (
             <section
-              className="animate-enter overflow-hidden rounded-3xl bg-gradient-day p-5 text-teal-foreground shadow-card sm:p-6"
+              className="luxury-card-hover animate-enter overflow-hidden rounded-3xl border border-white/15 bg-gradient-day p-5 text-white shadow-card sm:p-6"
               style={enterDelay(210)}
             >
               <div className="flex items-center gap-2">
-                <Sparkles className="size-5 shrink-0" />
-                <h2 className="font-display text-2xl font-bold">আজকের সেরা অজুহাত</h2>
+                <Sparkles className="size-5 shrink-0 text-sky-300" />
+                <h2 className="font-display text-2xl font-bold tracking-tight">আজকের সেরা অজুহাত</h2>
               </div>
-              <p className="mt-3 text-[15px] leading-relaxed opacity-95 sm:text-base">
+              <p className="mt-3 text-[15px] leading-[1.8] text-slate-100 sm:text-base">
                 “{daily.text}”
               </p>
-              <p className="mt-3 text-xs font-semibold opacity-85">
+              <p className="mt-3 text-xs font-semibold leading-relaxed text-sky-200/90">
                 প্রতিদিন নতুন একটি — কাল আবার দেখে যাবেন!
               </p>
             </section>
@@ -522,12 +522,12 @@ function Index() {
       </main>
 
       <footer className="mt-auto pt-8 text-center lg:pt-12">
-        <details className="group mx-auto mb-6 max-w-3xl rounded-2xl border border-border/70 bg-card/70 px-5 py-3.5 text-left shadow-sm transition-colors hover:border-primary/30">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-foreground sm:text-base">
+        <details className="luxury-glass-subtle group mx-auto mb-6 max-w-3xl rounded-2xl px-5 py-3.5 text-left shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-bold text-foreground sm:text-base">
             <span>অজুহাত ফ্যাক্টরি কী? (About Ojuhat Factory)</span>
             <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
           </summary>
-          <div className="mt-3 space-y-2.5 border-t border-border/60 pt-3 text-xs leading-relaxed text-muted-foreground sm:text-sm">
+          <div className="mt-3 space-y-2.5 border-t border-slate-200/75 pt-3 text-xs leading-[1.8] text-muted-foreground dark:border-white/10 sm:text-sm">
             <p>
               <strong className="font-semibold text-foreground">
                 অজুহাত ফ্যাক্টরি (Ojuhat Factory)
@@ -552,11 +552,11 @@ function Index() {
           </div>
         </details>
 
-        <p className="text-xs text-muted-foreground sm:text-sm">
+        <p className="text-xs leading-[1.7] text-muted-foreground sm:text-sm">
           ⚠️ শুধুমাত্র বিনোদনের জন্য তৈরি। ধরা পড়লে কর্তৃপক্ষ দায়ী নয়!
         </p>
         <p className="mt-1 font-display text-lg font-bold text-primary">অজুহাত ফ্যাক্টরি</p>
-        <div className="mx-auto mt-4 max-w-xs rounded-2xl border border-primary/20 bg-card/80 px-4 py-3 shadow-card">
+        <div className="luxury-glass luxury-card-hover mx-auto mt-4 max-w-xs rounded-2xl px-4 py-3.5">
           <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">
             তৈরি করেছেন
           </p>

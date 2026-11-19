@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-[1.03] active:scale-[0.94] active:duration-100 disabled:hover:scale-100 disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-0.5 hover:scale-[1.02] active:translate-y-0 active:scale-[0.94] active:duration-100 disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -16,11 +16,11 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        cta: "bg-gradient-cta text-primary-foreground animate-glow rounded-2xl font-bold hover:scale-[1.025] hover:brightness-105 active:scale-[0.95]",
-        soft: "bg-secondary text-secondary-foreground rounded-xl font-semibold hover:bg-secondary/80 hover:shadow-sm active:scale-[0.94]",
-        teal: "bg-teal text-teal-foreground rounded-xl font-semibold hover:bg-teal/90 hover:shadow-md active:scale-[0.94]",
+        cta: "bg-gradient-cta text-white animate-glow rounded-2xl border border-white/25 font-bold shadow-glow hover:scale-[1.02] hover:brightness-105 active:scale-[0.96]",
+        soft: "border border-slate-200/90 bg-white/80 text-slate-800 rounded-xl font-semibold shadow-xs hover:bg-slate-100/90 hover:border-slate-300 active:scale-[0.95] dark:border-white/12 dark:bg-white/8 dark:text-slate-100 dark:hover:bg-white/14",
+        teal: "bg-teal text-white rounded-xl font-semibold shadow-xs hover:brightness-105 hover:shadow-md active:scale-[0.95] dark:text-slate-950",
         whatsapp:
-          "bg-whatsapp text-whatsapp-foreground rounded-xl font-semibold hover:bg-whatsapp/90 hover:shadow-md active:scale-[0.94]",
+          "bg-whatsapp text-white rounded-xl font-semibold shadow-xs hover:brightness-105 hover:shadow-md active:scale-[0.95]",
       },
       size: {
         default: "h-9 px-4 py-2",

@@ -143,7 +143,9 @@ describe("excuse database", () => {
       customText: "আপুর মোবাইল নষ্ট করে ফেলেছি",
     });
     expect(gadget.id).toContain("device_broken");
-    expect(gadget.message).toMatch(/আপডেট|চার্জার|বিড়াল|ক্র্যাক|স্ক্রিন|সার্ভিস|ডিসপ্লে|ডিভাইস/);
+    expect(gadget.message).toMatch(
+      /আপডেট|চার্জার|বিড়াল|ক্র্যাক|স্ক্রিন|সার্ভিস|ডিসপ্লে|ডিভাইস|ভাইব্রেশন|পড়ে/,
+    );
 
     const money = generateSmartLocalExcuse({
       target: "boss",

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Copy, Download, Lightbulb, Loader2, MessageCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardCustomizerModal } from "@/components/ojuhat/CardCustomizerModal";
+import { useTypewriter } from "@/hooks/use-typewriter";
 import { scoreVerdict, toBanglaNumber, type GeneratedExcuse } from "@/lib/excuses";
 
 interface Props {
@@ -24,6 +25,9 @@ export function ResultCard({
   onWhatsApp,
 }: Props) {
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
+  const { displayedText, isTyping } = useTypewriter(result.message, animationKey, {
+    isStreaming,
+  });
 
   return (
     <>
@@ -31,19 +35,23 @@ export function ResultCard({
         key={`result-${animationKey}`}
         aria-live="polite"
         aria-busy={isStreaming}
-        className="animate-pop overflow-hidden rounded-3xl border border-border/60 bg-card shadow-card"
+        className="luxury-glass luxury-card-hover animate-pop overflow-hidden rounded-3xl"
       >
-        <div className="flex items-center justify-between gap-2 bg-gradient-cta px-4 py-3 text-primary-foreground sm:px-5">
-          <p className="text-sm font-semibold">
-            {isStreaming ? "⚡ AI লাইভ অজুহাত লিখছে..." : "🎁 আপনার অজুহাত প্রস্তুত!"}
+        <div className="flex items-center justify-between gap-2 bg-gradient-cta px-4 py-3 text-white sm:px-5">
+          <p className="text-sm font-bold tracking-tight">
+            {isStreaming
+              ? "⚡ AI লাইভ অজুহাত লিখছে..."
+              : isTyping
+                ? "✍️ অজুহাত লেখা হচ্ছে..."
+                : "🎁 আপনার অজুহাত প্রস্তুত!"}
           </p>
-          {isStreaming && (
+          {isTyping && (
             <Loader2 className="size-4 shrink-0 animate-spin opacity-90" aria-hidden="true" />
           )}
         </div>
 
         <div className="space-y-4 p-4 sm:space-y-5 sm:p-6">
-          <blockquote className="relative rounded-2xl bg-secondary p-4 text-base leading-relaxed text-secondary-foreground sm:text-[17px]">
+          <blockquote className="relative min-h-[5.5rem] rounded-2xl border border-slate-200/80 bg-slate-100/75 p-4 text-base leading-[1.82] text-slate-800 backdrop-blur-sm dark:border-white/10 dark:bg-slate-800/55 dark:text-slate-100 sm:text-[17px]">
             <span
               aria-hidden
               className="absolute -top-3 left-3 font-display text-5xl font-bold leading-none text-primary"
@@ -51,11 +59,11 @@ export function ResultCard({
               “
             </span>
             <p className="break-words pt-2">
-              {result.message}
-              {isStreaming && (
+              {displayedText}
+              {isTyping && (
                 <span
                   aria-hidden="true"
-                  className="ml-1 inline-block h-[1.05em] w-[2.5px] animate-pulse rounded-full bg-primary align-middle"
+                  className="ml-1 inline-block h-[1.1em] w-[2.5px] animate-pulse rounded-full bg-primary align-middle"
                 />
               )}
             </p>
@@ -64,9 +72,9 @@ export function ResultCard({
           {isStreaming ? (
             <div className="space-y-3" aria-hidden="true">
               <div className="h-3 w-full animate-pulse rounded-full bg-muted" />
-              <div className="rounded-2xl border-2 border-dashed border-sunny/50 bg-sunny/10 p-3.5">
-                <div className="h-3.5 w-32 animate-pulse rounded-md bg-sunny/25" />
-                <div className="mt-2 h-3 w-5/6 animate-pulse rounded-md bg-sunny/20" />
+              <div className="rounded-2xl border border-dashed border-amber-300/70 bg-amber-50/70 p-3.5 dark:border-amber-400/25 dark:bg-amber-950/30">
+                <div className="h-3.5 w-32 animate-pulse rounded-md bg-amber-500/25" />
+                <div className="mt-2 h-3 w-5/6 animate-pulse rounded-md bg-amber-500/15" />
               </div>
             </div>
           ) : (
@@ -76,12 +84,12 @@ export function ResultCard({
                   <span className="text-sm font-semibold text-muted-foreground">
                     বিশ্বাসযোগ্যতার হার
                   </span>
-                  <span className="font-display text-xl font-bold text-primary sm:text-2xl">
+                  <span className="font-display text-xl font-bold tabular-nums text-primary sm:text-2xl">
                     {toBanglaNumber(result.score)}% বিশ্বাসযোগ্য
                   </span>
                 </div>
                 <div
-                  className="h-3.5 w-full overflow-hidden rounded-full bg-muted"
+                  className="h-3.5 w-full overflow-hidden rounded-full bg-slate-200/80 dark:bg-slate-800"
                   role="progressbar"
                   aria-valuenow={result.score}
                   aria-valuemin={0}
@@ -92,14 +100,18 @@ export function ResultCard({
                     style={{ width: `${result.score}%` }}
                   />
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">{scoreVerdict(result.score)}</p>
+                <p className="mt-2 text-sm leading-[1.7] text-muted-foreground">
+                  {scoreVerdict(result.score)}
+                </p>
               </div>
 
-              <div className="flex gap-3 rounded-2xl border-2 border-dashed border-sunny/75 bg-sunny/15 p-3.5 sm:p-4 dark:bg-sunny/10">
-                <Lightbulb className="mt-0.5 size-5 shrink-0 text-sunny-foreground" />
+              <div className="flex gap-3 rounded-2xl border border-amber-300/70 bg-amber-50/80 p-3.5 backdrop-blur-sm sm:p-4 dark:border-amber-400/25 dark:bg-amber-950/35">
+                <Lightbulb className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-300" />
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-sunny-foreground">সতর্কতা / টিপস</p>
-                  <p className="mt-1 break-words text-sm leading-relaxed sm:text-[15px]">
+                  <p className="text-sm font-bold text-amber-800 dark:text-amber-300">
+                    সতর্কতা / টিপস
+                  </p>
+                  <p className="mt-1 break-words text-sm leading-[1.75] text-slate-700 dark:text-slate-200 sm:text-[15px]">
                     {result.tip}
                   </p>
                 </div>
@@ -123,7 +135,7 @@ export function ResultCard({
               size="action"
               onClick={() => setIsCustomizerOpen(true)}
               disabled={isStreaming}
-              className="flex h-auto min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-gradient-cta px-4 py-3 text-sm font-bold text-primary-foreground shadow-sm hover:brightness-105"
+              className="flex h-auto min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-white/20 bg-gradient-cta px-4 py-3 text-sm font-bold text-white shadow-sm hover:brightness-105"
             >
               <Download aria-hidden="true" />
               <span>কার্ড ডাউনলোড করুন</span>
