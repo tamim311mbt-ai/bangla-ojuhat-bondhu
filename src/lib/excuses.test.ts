@@ -174,4 +174,28 @@ describe("excuse database", () => {
     expect(study.id).toContain("studies_exam");
     expect(study.message).toMatch(/রুটিন|ফাইল|পড়াশোনা|অ্যাসাইনমেন্ট|জ্বর|পেনড্রাইভ/);
   });
+
+  it("blends custom user situation naturally into generated Bengali excuses across clicks", () => {
+    const first = generateSmartLocalExcuse({
+      target: "boss",
+      problem: "late",
+      tone: "real",
+      customText: "সাইকেলের চাকা পাংচার হয়ে গেছে",
+    });
+
+    expect(first.target).toBe("boss");
+    expect(first.customBadge).toBe(formatCustomExcuseBadge("real"));
+    expect(first.message).toContain("সাইকেলের চাকা পাংচার হয়ে গেছে");
+
+    const second = generateSmartLocalExcuse({
+      target: "boss",
+      problem: "late",
+      tone: "real",
+      customText: "সাইকেলের চাকা পাংচার হয়ে গেছে",
+      previousMessage: first.message,
+    });
+
+    expect(second.message).toContain("সাইকেলের চাকা পাংচার হয়ে গেছে");
+    expect(second.message).not.toBe(first.message);
+  });
 });

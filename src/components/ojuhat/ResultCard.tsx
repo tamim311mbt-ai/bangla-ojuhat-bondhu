@@ -8,42 +8,25 @@ import { scoreVerdict, toBanglaNumber, type GeneratedExcuse } from "@/lib/excuse
 interface Props {
   result: GeneratedExcuse;
   animationKey?: number;
-  isGenerating?: boolean;
-  isStreaming?: boolean;
   onCopy: () => void;
   onAnother: () => void;
   onWhatsApp: () => void;
 }
 
-export function ResultCard({
-  result,
-  animationKey = 0,
-  isGenerating = false,
-  isStreaming = false,
-  onCopy,
-  onAnother,
-  onWhatsApp,
-}: Props) {
+export function ResultCard({ result, animationKey = 0, onCopy, onAnother, onWhatsApp }: Props) {
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
-  const { displayedText, isTyping } = useTypewriter(result.message, animationKey, {
-    isStreaming,
-  });
+  const { displayedText, isTyping } = useTypewriter(result.message, animationKey);
 
   return (
     <>
       <section
         key={`result-${animationKey}`}
         aria-live="polite"
-        aria-busy={isStreaming}
         className="luxury-glass luxury-card-hover animate-pop overflow-hidden rounded-3xl"
       >
         <div className="flex items-center justify-between gap-2 bg-gradient-cta px-4 py-3 text-white sm:px-5">
           <p className="text-sm font-bold tracking-tight">
-            {isStreaming
-              ? "⚡ AI লাইভ অজুহাত লিখছে..."
-              : isTyping
-                ? "✍️ অজুহাত লেখা হচ্ছে..."
-                : "🎁 আপনার অজুহাত প্রস্তুত!"}
+            {isTyping ? "✍️ অজুহাত লেখা হচ্ছে..." : "🎁 আপনার অজুহাত প্রস্তুত!"}
           </p>
           {isTyping && (
             <Loader2 className="size-4 shrink-0 animate-spin opacity-90" aria-hidden="true" />
@@ -69,62 +52,45 @@ export function ResultCard({
             </p>
           </blockquote>
 
-          {isStreaming ? (
-            <div className="space-y-3" aria-hidden="true">
-              <div className="h-3 w-full animate-pulse rounded-full bg-muted" />
-              <div className="rounded-2xl border border-dashed border-amber-300/70 bg-amber-50/70 p-3.5 dark:border-amber-400/25 dark:bg-amber-950/30">
-                <div className="h-3.5 w-32 animate-pulse rounded-md bg-amber-500/25" />
-                <div className="mt-2 h-3 w-5/6 animate-pulse rounded-md bg-amber-500/15" />
-              </div>
+          <div>
+            <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
+              <span className="text-sm font-semibold text-muted-foreground">বিশ্বাসযোগ্যতার হার</span>
+              <span className="font-display text-xl font-bold tabular-nums text-primary sm:text-2xl">
+                {toBanglaNumber(result.score)}% বিশ্বাসযোগ্য
+              </span>
             </div>
-          ) : (
-            <>
-              <div>
-                <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    বিশ্বাসযোগ্যতার হার
-                  </span>
-                  <span className="font-display text-xl font-bold tabular-nums text-primary sm:text-2xl">
-                    {toBanglaNumber(result.score)}% বিশ্বাসযোগ্য
-                  </span>
-                </div>
-                <div
-                  className="h-3.5 w-full overflow-hidden rounded-full bg-slate-200/80 dark:bg-slate-800"
-                  role="progressbar"
-                  aria-valuenow={result.score}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                >
-                  <div
-                    className="animate-bar-fill h-full origin-left rounded-full bg-gradient-score transition-[width] duration-700 ease-out"
-                    style={{ width: `${result.score}%` }}
-                  />
-                </div>
-                <p className="mt-2 text-sm leading-[1.7] text-muted-foreground">
-                  {scoreVerdict(result.score)}
-                </p>
-              </div>
+            <div
+              className="h-3.5 w-full overflow-hidden rounded-full bg-slate-200/80 dark:bg-slate-800"
+              role="progressbar"
+              aria-valuenow={result.score}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div
+                className="animate-bar-fill h-full origin-left rounded-full bg-gradient-score transition-[width] duration-700 ease-out"
+                style={{ width: `${result.score}%` }}
+              />
+            </div>
+            <p className="mt-2 text-sm leading-[1.7] text-muted-foreground">
+              {scoreVerdict(result.score)}
+            </p>
+          </div>
 
-              <div className="flex gap-3 rounded-2xl border border-amber-300/70 bg-amber-50/80 p-3.5 backdrop-blur-sm sm:p-4 dark:border-amber-400/25 dark:bg-amber-950/35">
-                <Lightbulb className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-300" />
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-amber-800 dark:text-amber-300">
-                    সতর্কতা / টিপস
-                  </p>
-                  <p className="mt-1 break-words text-sm leading-[1.75] text-slate-700 dark:text-slate-200 sm:text-[15px]">
-                    {result.tip}
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
+          <div className="flex gap-3 rounded-2xl border border-amber-300/70 bg-amber-50/80 p-3.5 backdrop-blur-sm sm:p-4 dark:border-amber-400/25 dark:bg-amber-950/35">
+            <Lightbulb className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-300" />
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-amber-800 dark:text-amber-300">সতর্কতা / টিপস</p>
+              <p className="mt-1 break-words text-sm leading-[1.75] text-slate-700 dark:text-slate-200 sm:text-[15px]">
+                {result.tip}
+              </p>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <Button
               variant="soft"
               size="action"
               onClick={onCopy}
-              disabled={isStreaming}
               className="flex h-auto min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap px-4 py-3 text-sm"
             >
               <Copy aria-hidden="true" />
@@ -134,7 +100,6 @@ export function ResultCard({
               type="button"
               size="action"
               onClick={() => setIsCustomizerOpen(true)}
-              disabled={isStreaming}
               className="flex h-auto min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-white/20 bg-gradient-cta px-4 py-3 text-sm font-bold text-white shadow-sm hover:brightness-105"
             >
               <Download aria-hidden="true" />
@@ -144,7 +109,6 @@ export function ResultCard({
               variant="whatsapp"
               size="action"
               onClick={onWhatsApp}
-              disabled={isStreaming}
               className="flex h-auto min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap px-4 py-3 text-sm sm:col-span-2 lg:col-span-1"
             >
               <MessageCircle aria-hidden="true" />
@@ -154,10 +118,9 @@ export function ResultCard({
               variant="teal"
               size="action"
               onClick={onAnother}
-              disabled={isGenerating || isStreaming}
               className="flex h-auto min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap px-4 py-3 text-sm sm:col-span-2 lg:col-span-1"
             >
-              <RefreshCw className={isGenerating ? "animate-spin" : ""} aria-hidden="true" />
+              <RefreshCw aria-hidden="true" />
               <span>নতুন আরেকটি</span>
             </Button>
           </div>

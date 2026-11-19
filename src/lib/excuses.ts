@@ -167,33 +167,42 @@ interface CustomContextMatch {
  * Infers recipient, problem category, and specialized topic/scenario strictly from custom text
  * keywords so upper dropdown selections never conflict with what the user typed.
  */
-export function inferCustomContext(text: string): CustomContextMatch {
+export function inferCustomContext(
+  text: string,
+  fallbackTarget: Target = "friend",
+): CustomContextMatch {
   // Normalize Unicode so both precomposed (ড়/পড়া) and decomposed (ড়/পড়া) Bangla forms match identically
   const t = text.normalize("NFC").toLowerCase();
 
-  let target: Target = "friend";
+  let target: Target = fallbackTarget;
+  let hasExplicitTarget = false;
   if (/বস|ম্যানেজার|টিম লিড|অফিস|কোম্পানি|boss|office|manager/i.test(t)) {
     target = "boss";
+    hasExplicitTarget = true;
   } else if (
     /স্যার|শিক্ষক|ম্যাম|ম্যাডাম|টিচার|পরীক্ষা|ভাইবা|ক্লাস|অ্যাসাইনমেন্ট|পড়া|ক্যাম্পাস|ভার্সিটি|স্কুল|কলেজ|teacher|sir|exam|assignment|viva|class|study/i.test(
       t,
     )
   ) {
     target = "teacher";
+    hasExplicitTarget = true;
   } else if (
     /আপু|আপা|ভাইয়া|বোন|আম্মু|আব্বু|মা|বাবা|বাসা|বাড়ি|পরিবার|ফ্যামিলি|parents|mom|dad|family|sister/i.test(
       t,
     )
   ) {
     target = "parents";
+    hasExplicitTarget = true;
   } else if (
     /গার্লফ্রেন্ড|বয়ফ্রেন্ড|জানু|ভালোবাসা|বউ|স্বামী|প্রেম|ব্রেকআপ|partner|gf|bf|girlfriend|boyfriend/i.test(
       t,
     )
   ) {
     target = "partner";
+    hasExplicitTarget = true;
   } else if (/বন্ধু|দোস্ত|মামা|ভাই|ট্রিট|পচ|রোস্ট|আড্ডা|friend|bro|treat|roast/i.test(t)) {
     target = "friend";
+    hasExplicitTarget = true;
   }
 
   // Specialized intent detection first
@@ -265,7 +274,7 @@ export function inferCustomContext(text: string): CustomContextMatch {
     return { target, problem: "no_charge_net" };
   }
   if (/ছুটি|লিভ|অসুস্থ|জ্বর|ডাক্তার|হাসপাতাল|leave|sick|fever/i.test(t)) {
-    const leaveTarget = target === "friend" && /অফিস|ক্লাস|বস|স্যার/i.test(t) ? "boss" : target;
+    const leaveTarget = !hasExplicitTarget && /অফিস|ক্লাস|বস|স্যার/i.test(t) ? "boss" : target;
     return { target: leaveTarget, problem: "leave_request" };
   }
   if (/প্ল্যান ক্যানসেল|প্ল্যান বাদ|ক্যানসেল|হঠাৎ জরুরি|প্ল্যান.*বাতিল|cancel.*plan/i.test(t)) {
@@ -313,6 +322,38 @@ export function inferCustomContext(text: string): CustomContextMatch {
   return { target, problem: "cancel_plan" };
 }
 
+function buildCustomBlendedVariations(custom: string, target: Target, tone: Tone): string[] {
+  const addr = ADDRESS[target];
+  const closing = CLOSING[target][tone];
+
+  if (tone === "funny") {
+    return [
+      `${addr}, বিশ্বাস করবেন না — আমার কপালটাই এমন যে ঠিক বের হওয়ার মুখে হঠাৎ “${custom}” টাইপের মহাজট লেগে গেছে! জীবনটাই সার্কাস হয়ে গেল রে। ${closing}`,
+      `${addr}, মনে হচ্ছে কোনো অদৃশ্য ভিলেন আজ আমার নামে “${custom}” মিশন চালু করে দিয়েছে! এই ঝামেলা সামলে ফিরতে পারলে দেখা হচ্ছে। 😂 ${closing}`,
+      `${addr}, আজকে প্ল্যানেট-নক্ষত্র সব বিপক্ষে—একদিকে তাড়া, আরেকদিকে হঠাৎ “${custom}”! নিজেকে একটু রিস্টার্ট দিয়েই চলে আসছি। 😅 ${closing}`,
+      `${addr}, হলিউড মুভির চেয়েও বড় টুইস্ট—হঠাৎ করেই “${custom}”! পরিস্থিতি সামলে নিয়েই ঝড়ের গতিতে হাজির হচ্ছি। 🍿 ${closing}`,
+      `${addr}, সত্যি বলতে “${custom}” নাটকটা আজ একদম বিনা টিকিটেই কপালে জুটে গেল! কোনোমতে উদ্ধার পেয়েই জানাব। 😎 ${closing}`,
+    ];
+  }
+
+  if (tone === "emotional") {
+    return [
+      `${addr}, মন থেকে বলছি ইচ্ছা করে এমনটা করিনি—হঠাৎ ${custom} নিয়ে এমন এক চাপে পড়ে গেছি যে কিছুতেই সামাল দিতে পারছি না। ${closing}`,
+      `${addr}, আপনার কথা আমার মাথায় সবসময় ছিল, কিন্তু আচমকা ${custom} ঘটে যাওয়ায় সব এলোমেলো হয়ে গেল। ${closing}`,
+      `${addr}, বলতেও খুব সংকোচ আর খারাপ লাগছে—ঠিক এই সময়েই ${custom} সামনে চলে আসায় সত্যিই নিরুপায় হয়ে গেছি। ${closing}`,
+      `${addr}, বিশ্বাস করুন আপনার মন খারাপ করতে চাইনি; কেবল ${custom} নিয়ে আকস্মিক ঝামেলার কারণেই আটকে পড়লাম। ${closing}`,
+    ];
+  }
+
+  return [
+    `${addr}, বের হওয়ার ঠিক আগেই হঠাৎ ${custom} — এই অনাকাঙ্ক্ষিত ঝামেলাটা হয়ে গেছে। বিষয়টা সামলে নিয়েই যত দ্রুত সম্ভব জানাচ্ছি। ${closing}`,
+    `${addr}, সত্যি বলতে ${custom} নিয়ে হঠাৎ বেশ জরুরি একটা পরিস্থিতি তৈরি হওয়ায় সময়মতো পারছি না। একটু গুছিয়ে নিয়েই যোগাযোগ করছি। ${closing}`,
+    `${addr}, আজ সকাল থেকেই ${custom} সংক্রান্ত একটা অপ্রত্যাশিত কাজ সামলাতে হচ্ছে। পুরোপুরি শেষ হওয়া মাত্রই চলে আসছি। ${closing}`,
+    `${addr}, একদমই ভাবিনি এমন সময়ে ${custom} ঘটে সব শিডিউল এলোমেলো হয়ে যাবে! কোনোমতে সামাল দিয়েই রওনা দিচ্ছি। ${closing}`,
+    `${addr}, জরুরি ভিত্তিতে ${custom} সামলাতে গিয়ে হাতটা আটকে গেছে, ইচ্ছা থাকা সত্ত্বেও নড়তে পারছি না। ${closing}`,
+  ];
+}
+
 export function generateSmartLocalExcuse(
   input: {
     target: Target;
@@ -323,12 +364,13 @@ export function generateSmartLocalExcuse(
   },
   rand: () => number = Math.random,
 ): GeneratedExcuse {
-  const custom = input.customText?.trim().replace(/[।.!?]+$/, "");
+  const custom = input.customText
+    ?.trim()
+    .replace(/[।.!?]+$/, "")
+    .replace(/\s+/g, " ");
 
-  // Rule 1 & 3: When custom input exists, it takes top priority (overrides upper dropdowns)
-  // and NEVER pastes raw user text into any awkward quote template.
   if (custom) {
-    const ctx = inferCustomContext(custom);
+    const ctx = inferCustomContext(custom, input.target);
 
     if (ctx.scenario) {
       const scenarioMessages = CUSTOM_SCENARIO_MESSAGES[ctx.scenario][input.tone];
@@ -401,58 +443,28 @@ export function generateSmartLocalExcuse(
     }
 
     const effectiveTarget = ctx.target;
-    const effectiveProblem = ctx.problem;
-    const pool = getPool(effectiveTarget, effectiveProblem, input.tone);
-    const unseenBasePool = pool.filter((e) => !hasExcuseBeenSeen(e.id));
-
-    if (unseenBasePool.length > 0 && rand() < 0.7) {
-      const candidates = unseenBasePool.map((e) => ({
-        excuse: e,
-        message: `${ADDRESS[effectiveTarget]}, ${e.text} ${CLOSING[effectiveTarget][input.tone]}`,
-      }));
-      const freshCandidates = candidates.filter(
-        (c) => c.message !== input.previousMessage && !hasExcuseBeenSeen(c.message),
-      );
-      if (freshCandidates.length > 0) {
-        const chosen = pick(freshCandidates, rand);
-        markExcuseAsSeen(chosen.excuse.id);
-        markExcuseAsSeen(chosen.message);
-        const jitter = Math.round(rand() * 8) - 4;
-        const score = Math.max(1, Math.min(99, chosen.excuse.score + jitter));
-        const tip = pick([...TONE_TIPS[input.tone], ...TARGET_TIPS[effectiveTarget]], rand);
-        return {
-          id: `local-${chosen.excuse.id}-${Date.now()}`,
-          target: effectiveTarget,
-          tone: input.tone,
-          customBadge: formatCustomExcuseBadge(input.tone),
-          message: chosen.message,
-          score,
-          tip,
-        };
-      }
-    }
-
-    const combo = pickUnseenCombinatorVariation(
-      effectiveTarget,
-      effectiveProblem,
-      input.tone,
-      rand,
-      undefined,
-      input.previousMessage,
+    const blendedPool = buildCustomBlendedVariations(custom, effectiveTarget, input.tone);
+    const unseenBlended = blendedPool.filter(
+      (msg) => msg !== input.previousMessage && !hasExcuseBeenSeen(msg),
     );
-    markExcuseAsSeen(combo.variationId);
-    markExcuseAsSeen(combo.text);
+    const freshBlended = blendedPool.filter((msg) => msg !== input.previousMessage);
+    const message = pick(
+      unseenBlended.length ? unseenBlended : freshBlended.length ? freshBlended : blendedPool,
+      rand,
+    );
+    markExcuseAsSeen(message);
 
+    const baseScore = input.tone === "funny" ? 24 : input.tone === "emotional" ? 74 : 86;
     const jitter = Math.round(rand() * 8) - 4;
-    const score = Math.max(1, Math.min(99, combo.score + jitter));
+    const score = Math.max(1, Math.min(99, baseScore + jitter));
     const tip = pick([...TONE_TIPS[input.tone], ...TARGET_TIPS[effectiveTarget]], rand);
 
     return {
-      id: combo.variationId,
+      id: `local-custom-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       target: effectiveTarget,
       tone: input.tone,
       customBadge: formatCustomExcuseBadge(input.tone),
-      message: combo.text,
+      message,
       score,
       tip,
     };
